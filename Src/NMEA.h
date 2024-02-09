@@ -435,6 +435,7 @@ typedef struct {
 #endif
 #if NMEA_MESSAGE_GSA_HDOP
     float                       HDOP;
+#endif
 #if NMEA_MESSAGE_GSA_VDOP
     float                       VDOP;
 #endif
