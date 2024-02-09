@@ -16,12 +16,8 @@ uint32_t Assert_Message_RMC(NMEA_Message_RMC* msg1, NMEA_Message_RMC* msg2, uint
 uint32_t Assert_Message_VTG(NMEA_Message_VTG* msg1, NMEA_Message_VTG* msg2, uint32_t line);
 uint32_t Assert_Message_ZDA(NMEA_Message_ZDA* msg1, NMEA_Message_ZDA* msg2, uint32_t line);
 
-uint32_t Assert_Str(const char* str1, const char* str2, uint32_t line);
-uint32_t Assert_Word(const char* str, const char* word, uint32_t line);
 uint32_t Assert_Num(int num1, int num2, uint32_t line);
 uint32_t Assert_Float(float num1, float num2, uint32_t line);
-uint32_t Assert_Strs(const char** strs1, const char** strs2, int len, uint32_t line);
-uint32_t Assert_Ptr(const void* ptr1, const void* ptr2, uint32_t line);
 
 uint32_t assertResult = 0;
 #define assert(TYPE, ...)			if((assertResult = Assert_ ##TYPE (__VA_ARGS__, __LINE__)) != Str_Ok) return assertResult
@@ -103,18 +99,23 @@ uint32_t Test_GGA(void) {
             },
             .Latitude = {
                 .Degrees = 35,
-                .Minutes = 41.68513,
+                .Minutes = 41.68513f,
                 .Indicator = NMEA_Indicator_North,
             },
             .Longitude = {
                 .Degrees = 51,
-                .Minutes = 23.50382,
+                .Minutes = 23.50382f,
                 .Indicator = NMEA_Indicator_East,
             },
-            .PositionFix = NMEA_PositionFix_GPS,
+            .PositionFix = NMEA_PositionFix_DifferentialGPS,
             .SatellitesUsed = 11,
-            .HDOP = 0.85,
-            .Altitude = 1236.4,
+            .HDOP = 0.85f,
+            .Altitude = 1236.4f,
+            .AltitudeUnit = 'M',
+            .Geoid = -17.6f, 
+            .GeoidUnits = 'M',
+            .AgeOfDiff = 0,
+            .DiffRefStationId = 0,
         },
     };
     Str_copy(temp, "$GPGGA,071457.00,3541.68513,N,05123.50382,E,2,11,0.85,1236.4,M,-17.6,M,,0000*4E\r\n");
@@ -181,7 +182,7 @@ uint32_t Assert_Result(NMEA_Result res, uint32_t line) {
         "MagneticVariationFormatInvalid",
         "MagneticVariationIndicatorInvalid",
     };
-    
+
     if (res != NMEA_Result_Ok) {
         if (res & NMEA_Result_Custom) {
             PRINTF("Custom(%d)\r\n", res & 0x7F);
@@ -206,7 +207,7 @@ uint32_t Assert_Message(NMEA_Message* msg1, NMEA_Message* msg2, uint32_t line) {
     }
 
     switch (msg1->Header.Type) {
-    #if NMEA_MESSAGE_GGA 
+    #if NMEA_MESSAGE_GGA
         case NMEA_MessageType_GGA:
             assert(Message_GGA, &msg1->GGA, &msg2->GGA);
             break;
@@ -241,7 +242,7 @@ uint32_t Assert_Message(NMEA_Message* msg1, NMEA_Message* msg2, uint32_t line) {
                 PRINTF("RMC Error\r\n");
                 return Str_Error | line << 1;
             }
-            break;  
+            break;
     #endif
     #if NMEA_MESSAGE_VTG
         case NMEA_MessageType_VTG:
@@ -273,12 +274,12 @@ uint32_t Assert_Message_GGA(NMEA_Message_GGA* msg1, NMEA_Message_GGA* msg2, uint
 #if NMEA_MESSAGE_GGA_LATITUDE
     assert(Num, msg1->Latitude.Degrees, msg2->Latitude.Degrees);
     assert(Float, msg1->Latitude.Minutes, msg2->Latitude.Minutes);
-    assert(Word, msg1->Latitude.Indicator, msg2->Latitude.Indicator);
+    assert(Num, msg1->Latitude.Indicator, msg2->Latitude.Indicator);
 #endif
 #if NMEA_MESSAGE_GGA_LONGITUDE
     assert(Float, msg1->Longitude.Degrees, msg2->Longitude.Degrees);
     assert(Float, msg1->Longitude.Minutes, msg2->Longitude.Minutes);
-    assert(Word, msg1->Longitude.Indicator, msg2->Longitude.Indicator);
+    assert(Num, msg1->Longitude.Indicator, msg2->Longitude.Indicator);
 #endif
 #if NMEA_MESSAGE_GGA_POSITIONFIX
     assert(Num, msg1->PositionFix, msg2->PositionFix);
@@ -292,14 +293,14 @@ uint32_t Assert_Message_GGA(NMEA_Message_GGA* msg1, NMEA_Message_GGA* msg2, uint
 #if NMEA_MESSAGE_GGA_ALTITUDE
     assert(Float, msg1->Altitude, msg2->Altitude);
 #endif
-#if NMEA_MESSAGE_GGA_ALTITUDEUNITS
-    assert(Word, msg1->AltitudeUnit, msg2->AltitudeUnit);
+#if NMEA_MESSAGE_GGA_ALTITUDE_UNIT
+    assert(Num, msg1->AltitudeUnit, msg2->AltitudeUnit);
 #endif
 #if NMEA_MESSAGE_GGA_GEOID
     assert(Float, msg1->Geoid, msg2->Geoid);
 #endif
 #if NMEA_MESSAGE_GGA_GEOIDUNITS
-    assert(Word, msg1->GeoidUnits, msg2->GeoidUnits);
+    assert(Num, msg1->GeoidUnits, msg2->GeoidUnits);
 #endif
 #if NMEA_MESSAGE_GGA_DIFFREFSTATIONID
     assert(Num, msg1->DiffRefStationId, msg2->DiffRefStationId);
@@ -316,20 +317,7 @@ uint32_t Assert_Message_GSV(NMEA_Message_GSV* msg1, NMEA_Message_GSV* msg2, uint
 uint32_t Assert_Message_RMC(NMEA_Message_RMC* msg1, NMEA_Message_RMC* msg2, uint32_t line);
 uint32_t Assert_Message_VTG(NMEA_Message_VTG* msg1, NMEA_Message_VTG* msg2, uint32_t line);
 uint32_t Assert_Message_ZDA(NMEA_Message_ZDA* msg1, NMEA_Message_ZDA* msg2, uint32_t line);
-uint32_t Assert_Str(const char* str1, const char* str2, uint32_t line) {
-	if (Str_compare(str1, str2)) {
-		PRINTF("\"%s\"\n", str1);
-		return Str_Error | line << 1;
-	}
-	return (uint32_t) Str_Ok;
-}
-uint32_t Assert_Word(const char* str, const char* word, uint32_t line) {
-	if (Str_compareWord(str, word)) {
-		PRINTF("\"%s\"\n", word);
-		return Str_Error | line << 1;
-	}
-	return (uint32_t) Str_Ok;
-}
+
 uint32_t Assert_Num(int num1, int num2, uint32_t line) {
 	if (num1 != num2) {
 		PRINTF("%d\r\n", (num1));
@@ -343,25 +331,5 @@ uint32_t Assert_Float(float num1, float num2, uint32_t line) {
 		return Str_Error | line << 1;
 	}
 	return (uint32_t) Str_Ok;
-}
-
-uint32_t Assert_Strs(const char** strs1, const char** strs2, int len, uint32_t line) {
-	int tempLen = len;
-	const char** tempStrs = strs1;
-	while (len--) {
-		if (Str_compare(*strs1++, *strs2++)) {
-			printStrs(tempStrs, tempLen);
-			return Str_Error | line << 1;
-		}
-	}
-	return (uint32_t) Str_Ok;
-}
-
-uint32_t Assert_Ptr(const void* ptr1, const void* ptr2, uint32_t line) {
-    if (ptr1 != ptr2) {
-        PRINTF("%p\r\n", (ptr1));
-		return Str_Error | line << 1;
-    }
-    return (uint32_t) Str_Ok;
 }
 
