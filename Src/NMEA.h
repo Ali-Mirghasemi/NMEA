@@ -51,7 +51,7 @@ extern "C" {
     #define NMEA_MESSAGE_GGA_TIME               1
     #define NMEA_MESSAGE_GGA_POSITIONFIX        1
     #define NMEA_MESSAGE_GGA_SATELLITESUSED     1
-    #define NMEA_MESSAGE_GGA_ALTITUDEUNITS      1
+    #define NMEA_MESSAGE_GGA_ALTITUDE_UNIT      1
     #define NMEA_MESSAGE_GGA_GEOIDUNITS         1
     #define NMEA_MESSAGE_GGA_AGEOFDIFF          1
 #endif
@@ -154,7 +154,7 @@ extern "C" {
                                                  NMEA_MESSAGE_GGA_TIME + \
                                                  NMEA_MESSAGE_GGA_POSITIONFIX + \
                                                  NMEA_MESSAGE_GGA_SATELLITESUSED + \
-                                                 NMEA_MESSAGE_GGA_ALTITUDEUNITS + \
+                                                 NMEA_MESSAGE_GGA_ALTITUDE_UNIT + \
                                                  NMEA_MESSAGE_GGA_GEOIDUNITS + \
                                                  NMEA_MESSAGE_GGA_AGEOFDIFF)
 
@@ -169,12 +169,12 @@ extern "C" {
                                                  NMEA_MESSAGE_GSA_VDOP + \
                                                  NMEA_MESSAGE_GSA_MODE + \
                                                  NMEA_MESSAGE_GSA_FIX_STATUS + \
-                                                 NMEA_MESSAGE_GSA_SATELLITESUSED)
+                                                 (NMEA_MESSAGE_GSA_SATELLITESUSED * 12))
 
 #define NMEA_MESSAGE_GSV_FIELDS_LENGTH          (NMEA_MESSAGE_GSV_SATELLITES + \
                                                  NMEA_MESSAGE_GSV_TOTALMESSAGES + \
                                                  NMEA_MESSAGE_GSV_MESSAGENUMBER + \
-                                                 NMEA_MESSAGE_GSV_SATELLITESINVIEW)
+                                                 (NMEA_MESSAGE_GSV_SATELLITESINVIEW * 4 * 4))
 
 #define NMEA_MESSAGE_MSS_FIELDS_LENGTH          (NMEA_MESSAGE_MSS_BEACONFREQUENCY + \
                                                  NMEA_MESSAGE_MSS_BEACONBITRATE + \
@@ -252,11 +252,11 @@ typedef enum {
  */
 typedef enum {
     NMEA_Id_Beidou,                     /*< BD */
-    NMEA_Id_BeidouGlobal,               /*< GB */
     NMEA_Id_Galileo,                    /*< GA */
-    NMEA_Id_GPS,                        /*< GP */
+    NMEA_Id_BeidouGlobal,               /*< GB */
     NMEA_Id_GLONASS,                    /*< GL */
     NMEA_Id_GPS_GLONASS,                /*< GN */
+    NMEA_Id_GPS,                        /*< GP */
     NMEA_Id_Unknown             = 255,
 } NMEA_Id;
 /**
@@ -389,7 +389,7 @@ typedef struct {
 #if NMEA_MESSAGE_GGA_SATELLITESUSED
     uint8_t                     SatellitesUsed;
 #endif
-#if NMEA_MESSAGE_GGA_ALTITUDEUNITS
+#if NMEA_MESSAGE_GGA_ALTITUDE_UNIT
     uint8_t                     AltitudeUnit;
 #endif
 #if NMEA_MESSAGE_GGA_GEOIDUNITS

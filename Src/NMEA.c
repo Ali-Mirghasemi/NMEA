@@ -20,8 +20,8 @@ typedef struct {
 #define NMEA_MESSAGE_IDS_LEN        NMEA_MessageType_Reserved
 /* Private Functions */
 // Compare functions
-static Str_CmpResult NMEA_compareTalkerId(const char* itemA, const char* ItemB);
-static Str_CmpResult NMEA_compareMessageType(const char* itemA, const char* ItemB);
+static Mem_CmpResult NMEA_compareTalkerId(const char* itemA, const char* ItemB);
+static Mem_CmpResult NMEA_compareMessageType(const char* itemA, const char* ItemB);
 // Basic Field Parser
 static NMEA_Result NMEA_Field_Char_parse(char* line, char* val);
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val);
@@ -38,14 +38,15 @@ static NMEA_Result NMEA_Field_GSA_Mode_parse(char* line, uint8_t* mode);
 static NMEA_Result NMEA_Field_FixStatus_parse(char* line, uint8_t* mode);
 static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor);
 static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor);
-static NMEA_Result NMEA_Field_MagneticVariation_parse(char* line, NMEA_MagneticVariation* mag);
-static NMEA_Result NMEA_Field_SatelliteInView_parse(char* line, NMEA_SatelliteInView* sat);
+static NMEA_Result NMEA_Field_LatitudeIndicator_parse(char* line, NMEA_Coordinate* cor);
+static NMEA_Result NMEA_Field_LongitudeIndicator_parse(char* line, NMEA_Coordinate* cor);
+static NMEA_Result NMEA_Field_MagneticVariationIndicator_parse(char* line, NMEA_MagneticVariation* mag);
 // Full Fields List Parser
 static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NMEA_Message* msg);
 /* Private Macros */
 #define ARR_LEN(ARR)                            (sizeof(ARR)/sizeof(ARR[0]))
-#define __offset(MSG, FIELD)                    ((uint8_t)((uint32_t) &((const MSG*) 0)->FIELD))
-#define __field(MSG, IDX, TYPE, FIELD)          { .parse = (NMEA_ParseFieldFn) NMEA_Field_ ##TYPE ##_parse, .Index = IDX, .Offset = __offset(MSG, FIELD) }
+#define __offset(MSG, FIELD)                    (uint32_t) &((const MSG*) 0)->FIELD
+#define __field(MSG, IDX, TYPE, FIELD)          { .parse = (NMEA_ParseFieldFn) NMEA_Field_ ##TYPE ##_parse , .Index = IDX, .Offset = __offset(MSG, FIELD) }
 #define __fieldList(MSG)                        { .Fields = MSG ##_PARSE_FIELD, .Len = NMEA_MESSAGE_ ##MSG ##_FIELDS_LENGTH }
 
 #if NMEA_SUPPORT_MULTI_CALLBACK
@@ -56,87 +57,91 @@ static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NME
 /* Private Static Const */
 // GGA fields
 #if NMEA_MESSAGE_GGA
-static const NMEA_ParseFieldFn GGA_PARSE_FIELD[NMEA_MESSAGE_GGA_FIELDS_LENGTH] = {
+static const NMEA_Field GGA_PARSE_FIELD[NMEA_MESSAGE_GGA_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_GGA_TIME
     __field(NMEA_Message_GGA, 0, Time, Time),
 #endif
 #if NMEA_MESSAGE_GGA_LATITUDE
     __field(NMEA_Message_GGA, 1, Latitude, Latitude),
+    __field(NMEA_Message_GGA, 2, LatitudeIndicator, Latitude),
 #endif
 #if NMEA_MESSAGE_GGA_LONGITUDE
-    __field(NMEA_Message_GGA, 2, Longitude, Longitude),
+    __field(NMEA_Message_GGA, 3, Longitude, Longitude),
+    __field(NMEA_Message_GGA, 4, LongitudeIndicator, Longitude),
 #endif
 #if NMEA_MESSAGE_GGA_POSITIONFIX
-    __field(NMEA_Message_GGA, 3, PositionFix, PositionFix),
+    __field(NMEA_Message_GGA, 5, PositionFix, PositionFix),
 #endif
 #if NMEA_MESSAGE_GGA_SATELLITESUSED
-    __field(NMEA_Message_GGA, 4, UInt8, SatellitesUsed),
+    __field(NMEA_Message_GGA, 6, UInt8, SatellitesUsed),
 #endif
 #if NMEA_MESSAGE_GGA_HDOP
-    __field(NMEA_Message_GGA, 5, Float, HDOP),
+    __field(NMEA_Message_GGA, 7, Float, HDOP),
 #endif
 #if NMEA_MESSAGE_GGA_ALTITUDE
-    __field(NMEA_Message_GGA, 6, Float, Altitude),
+    __field(NMEA_Message_GGA, 8, Float, Altitude),
 #endif
-#if NMEA_MESSAGE_GGA_ALTITUDEUNITS
-    __field(NMEA_Message_GGA, 7, Char, AltitudeUnits),
+#if NMEA_MESSAGE_GGA_ALTITUDE_UNIT
+    __field(NMEA_Message_GGA, 9, Char, AltitudeUnit),
 #endif
 #if NMEA_MESSAGE_GGA_GEOID
-    __field(NMEA_Message_GGA, 8, Float, Geoid),
+    __field(NMEA_Message_GGA, 10, Float, Geoid),
 #endif
 #if NMEA_MESSAGE_GGA_GEOIDUNITS
-    __field(NMEA_Message_GGA, 9, Char, GeoidUnits),
+    __field(NMEA_Message_GGA, 11, Char, GeoidUnits),
 #endif
 #if NMEA_MESSAGE_GGA_AGEOFDIFF
-    __field(NMEA_Message_GGA, 10, UInt8, AgeOfDiff),
+    __field(NMEA_Message_GGA, 12, UInt8, AgeOfDiff),
 #endif
 #if NMEA_MESSAGE_GGA_DIFFREFSTATIONID
-    __field(NMEA_Message_GGA, 11, UInt32, DiffRefStationId),
+    __field(NMEA_Message_GGA, 13, UInt32, DiffRefStationId),
 #endif
 };
 #endif
 // GLL Fields
 #if NMEA_MESSAGE_GLL
-static const NMEA_ParseFieldFn GLL_PARSE_FIELD[NMEA_MESSAGE_GLL_FIELDS_LENGTH] = {
+static const NMEA_Field GLL_PARSE_FIELD[NMEA_MESSAGE_GLL_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_GLL_LATITUDE
     __field(NMEA_Message_GLL, 0, Latitude, Latitude),
+    __field(NMEA_Message_GLL, 1, LatitudeIndicator, Latitude),
 #endif
 #if NMEA_MESSAGE_GLL_LONGITUDE
-    __field(NMEA_Message_GLL, 1, Longitude, Longitude),
+    __field(NMEA_Message_GLL, 2, Longitude, Longitude),
+    __field(NMEA_Message_GLL, 3, LongitudeIndicator, Longitude),
 #endif
 #if NMEA_MESSAGE_GLL_TIME
-    __field(NMEA_Message_GLL, 2, Time, Time),
+    __field(NMEA_Message_GLL, 4, Time, Time),
 #endif
 #if NMEA_MESSAGE_GLL_STATUS
-    __field(NMEA_Message_GLL, 3, Char, Status),
+    __field(NMEA_Message_GLL, 5, Char, Status),
 #endif
 #if NMEA_MESSAGE_GLL_MODE
-    __field(NMEA_Message_GLL, 4, Char, Mode),
+    __field(NMEA_Message_GLL, 6, Char, Mode),
 #endif
 };
 #endif
 // GSA Fields
 #if NMEA_MESSAGE_GSA
-static const NMEA_ParseFieldFn GSA_PARSE_FIELD[NMEA_MESSAGE_GSA_FIELDS_LENGTH] = {
+static const NMEA_Field GSA_PARSE_FIELD[NMEA_MESSAGE_GSA_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_GSA_MODE
-    __field(NMEA_Message_GSA, 0, GSA_Mode1, Mode1),
+    __field(NMEA_Message_GSA, 0, GSA_Mode, Mode),
 #endif
 #if NMEA_MESSAGE_GSA_FIX_STATUS
     __field(NMEA_Message_GSA, 1, FixStatus, FixStatus),
 #endif
 #if NMEA_MESSAGE_GSA_SATELLITESUSED
-    __field(NMEA_Message_GSA, 2, UInt8, Satellites[0]),
-    __field(NMEA_Message_GSA, 3, UInt8, Satellites[1]),
-    __field(NMEA_Message_GSA, 4, UInt8, Satellites[2]),
-    __field(NMEA_Message_GSA, 5, UInt8, Satellites[3]),
-    __field(NMEA_Message_GSA, 6, UInt8, Satellites[4]),
-    __field(NMEA_Message_GSA, 7, UInt8, Satellites[5]),
-    __field(NMEA_Message_GSA, 8, UInt8, Satellites[6]),
-    __field(NMEA_Message_GSA, 9, UInt8, Satellites[7]),
-    __field(NMEA_Message_GSA, 10, UInt8, Satellites[8]),
-    __field(NMEA_Message_GSA, 11, UInt8, Satellites[9]),
-    __field(NMEA_Message_GSA, 12, UInt8, Satellites[10]),
-    __field(NMEA_Message_GSA, 13, UInt8, Satellites[11]),
+    __field(NMEA_Message_GSA, 2, UInt8, SatellitesUsed[0]),
+    __field(NMEA_Message_GSA, 3, UInt8, SatellitesUsed[1]),
+    __field(NMEA_Message_GSA, 4, UInt8, SatellitesUsed[2]),
+    __field(NMEA_Message_GSA, 5, UInt8, SatellitesUsed[3]),
+    __field(NMEA_Message_GSA, 6, UInt8, SatellitesUsed[4]),
+    __field(NMEA_Message_GSA, 7, UInt8, SatellitesUsed[5]),
+    __field(NMEA_Message_GSA, 8, UInt8, SatellitesUsed[6]),
+    __field(NMEA_Message_GSA, 9, UInt8, SatellitesUsed[7]),
+    __field(NMEA_Message_GSA, 10, UInt8, SatellitesUsed[8]),
+    __field(NMEA_Message_GSA, 11, UInt8, SatellitesUsed[9]),
+    __field(NMEA_Message_GSA, 12, UInt8, SatellitesUsed[10]),
+    __field(NMEA_Message_GSA, 13, UInt8, SatellitesUsed[11]),
 #endif
 #if NMEA_MESSAGE_GSA_PDOP
     __field(NMEA_Message_GSA, 14, Float, PDOP),
@@ -151,7 +156,7 @@ static const NMEA_ParseFieldFn GSA_PARSE_FIELD[NMEA_MESSAGE_GSA_FIELDS_LENGTH] =
 #endif
 // GSV Fields
 #if NMEA_MESSAGE_GSV
-static const NMEA_ParseFieldFn GSV_PARSE_FIELD[NMEA_MESSAGE_GSV_FIELDS_LENGTH] = {
+static const NMEA_Field GSV_PARSE_FIELD[NMEA_MESSAGE_GSV_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_GSV_TOTALMESSAGES
     __field(NMEA_Message_GSV, 0, UInt8, TotalMessages),
 #endif
@@ -162,16 +167,28 @@ static const NMEA_ParseFieldFn GSV_PARSE_FIELD[NMEA_MESSAGE_GSV_FIELDS_LENGTH] =
     __field(NMEA_Message_GSV, 2, UInt8, SatellitesInView),
 #endif
 #if NMEA_MESSAGE_GSV_SATELLITES
-    __field(NMEA_Message_GSV, 3, SatelliteInView, Satellites[0]),
-    __field(NMEA_Message_GSV, 4, SatelliteInView, Satellites[1]),
-    __field(NMEA_Message_GSV, 5, SatelliteInView, Satellites[2]),
-    __field(NMEA_Message_GSV, 6, SatelliteInView, Satellites[3]),
+    __field(NMEA_Message_GSV, 3,  UInt8,  Satellites[0].Id),
+    __field(NMEA_Message_GSV, 4,  UInt16, Satellites[0].Elevation),
+    __field(NMEA_Message_GSV, 5,  UInt8,  Satellites[0].Azimuth),
+    __field(NMEA_Message_GSV, 6,  UInt8,  Satellites[0].SNR),
+    __field(NMEA_Message_GSV, 7,  UInt8,  Satellites[1].Id),
+    __field(NMEA_Message_GSV, 8,  UInt16, Satellites[1].Elevation),
+    __field(NMEA_Message_GSV, 9,  UInt8,  Satellites[1].Azimuth),
+    __field(NMEA_Message_GSV, 10, UInt8,  Satellites[1].SNR),
+    __field(NMEA_Message_GSV, 11, UInt8,  Satellites[2].Id),
+    __field(NMEA_Message_GSV, 12, UInt16, Satellites[2].Elevation),
+    __field(NMEA_Message_GSV, 13, UInt8,  Satellites[2].Azimuth),
+    __field(NMEA_Message_GSV, 14, UInt8,  Satellites[2].SNR),
+    __field(NMEA_Message_GSV, 15, UInt8,  Satellites[3].Id),
+    __field(NMEA_Message_GSV, 16, UInt16, Satellites[3].Elevation),
+    __field(NMEA_Message_GSV, 17, UInt8,  Satellites[3].Azimuth),
+    __field(NMEA_Message_GSV, 18, UInt8,  Satellites[3].SNR),
 #endif
 };
 #endif
 // MSS Fields
 #if NMEA_MESSAGE_MSS
-static const NMEA_ParseFieldFn MSS_PARSE_FIELD[NMEA_MESSAGE_MSS_FIELDS_LENGTH] = {
+static const NMEA_Field MSS_PARSE_FIELD[NMEA_MESSAGE_MSS_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_MSS_SIGNALSTRENGTH
     __field(NMEA_Message_MSS, 0, UInt8, SignalStrength),
 #endif
@@ -182,16 +199,16 @@ static const NMEA_ParseFieldFn MSS_PARSE_FIELD[NMEA_MESSAGE_MSS_FIELDS_LENGTH] =
     __field(NMEA_Message_MSS, 2, Float, BeaconFrequency),
 #endif
 #if NMEA_MESSAGE_MSS_BEACONBITRATE
-    __field(NMEA_Message_MSS, 3, uint16_t, BeaconBitRate),
+    __field(NMEA_Message_MSS, 3, UInt16, BeaconBitRate),
 #endif
 #if NMEA_MESSAGE_MSS_CHANNELNUMBER
-    __field(NMEA_Message_MSS, 4, uint8_t, ChannelNumber),
+    __field(NMEA_Message_MSS, 4, UInt8, ChannelNumber),
 #endif
 };
 #endif
 // RMC Fields
 #if NMEA_MESSAGE_RMC
-static const NMEA_ParseFieldFn RMC_PARSE_FIELD[NMEA_MESSAGE_RMC_FIELDS_LENGTH] = {
+static const NMEA_Field RMC_PARSE_FIELD[NMEA_MESSAGE_RMC_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_RMC_TIME
     __field(NMEA_Message_RMC, 0, Time, Time),
 #endif
@@ -200,30 +217,33 @@ static const NMEA_ParseFieldFn RMC_PARSE_FIELD[NMEA_MESSAGE_RMC_FIELDS_LENGTH] =
 #endif
 #if NMEA_MESSAGE_RMC_LATITUDE
     __field(NMEA_Message_RMC, 2, Latitude, Latitude),
+    __field(NMEA_Message_RMC, 3, LatitudeIndicator, Latitude),
 #endif
 #if NMEA_MESSAGE_RMC_LONGITUDE
-    __field(NMEA_Message_RMC, 3, Longitude, Longitude),
+    __field(NMEA_Message_RMC, 4, Longitude, Longitude),
+    __field(NMEA_Message_RMC, 5, LongitudeIndicator, Longitude),
 #endif
 #if NMEA_MESSAGE_RMC_SPEEDOVERGROUND
-    __field(NMEA_Message_RMC, 4, Float, SpeedOverGround),
+    __field(NMEA_Message_RMC, 6, Float, SpeedOverGround),
 #endif
 #if NMEA_MESSAGE_RMC_COURSEOVERGROUND
-    __field(NMEA_Message_RMC, 5, Float, CourseOverGround),
+    __field(NMEA_Message_RMC, 7, Float, CourseOverGround),
 #endif
 #if NMEA_MESSAGE_RMC_DATE
-    __field(NMEA_Message_RMC, 6, Date, Date),
+    __field(NMEA_Message_RMC, 8, Date, Date),
 #endif
 #if NMEA_MESSAGE_RMC_MAGNETICVARIATION
-    __field(NMEA_Message_RMC, 7, MagneticVariation, MagneticVariation),
+    __field(NMEA_Message_RMC, 9, Float, MagneticVariation.Degrees),
+    __field(NMEA_Message_RMC, 10, MagneticVariationIndicator, MagneticVariation),
 #endif
 #if NMEA_MESSAGE_RMC_MODE
-    __field(NMEA_Message_RMC, 8, Mode, Mode),
+    __field(NMEA_Message_RMC, 11, Mode, Mode),
 #endif
 };
 #endif
 // VTG Fields
 #if NMEA_MESSAGE_VTG
-static const NMEA_ParseFieldFn VTG_PARSE_FIELD[NMEA_MESSAGE_VTG_FIELDS_LENGTH] = {
+static const NMEA_Field VTG_PARSE_FIELD[NMEA_MESSAGE_VTG_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_VTG_COURSE1
     __field(NMEA_Message_VTG, 0, Float, Course1),
 #endif
@@ -255,7 +275,7 @@ static const NMEA_ParseFieldFn VTG_PARSE_FIELD[NMEA_MESSAGE_VTG_FIELDS_LENGTH] =
 #endif
 // ZDA Fields
 #if NMEA_MESSAGE_ZDA
-static const NMEA_ParseFieldFn ZDA_PARSE_FIELD[NMEA_MESSAGE_ZDA_FIELDS_LENGTH] = {
+static const NMEA_Field ZDA_PARSE_FIELD[NMEA_MESSAGE_ZDA_FIELDS_LENGTH] = {
 #if NMEA_MESSAGE_ZDA_TIME
     __field(NMEA_Message_ZDA, 0, Time, Time),
 #endif
@@ -333,11 +353,11 @@ static const char NMEA_MESSAGE_IDS[NMEA_MESSAGE_IDS_LEN][NMEA_MESSAGE_ID_LEN] = 
 // List of Supported Talker ids
 static const char NMEA_TALKER_IDS[][NMEA_TALKER_ID_LEN] = {
     "BD",
-    "GB",
     "GA",
-    "GP",
+    "GB",
     "GL",
     "GN",
+    "GP",
 };
 static const uint8_t NMEA_TALKER_IDS_LEN = sizeof(NMEA_TALKER_IDS) / sizeof(NMEA_TALKER_IDS[0]);
 
@@ -345,9 +365,9 @@ static const char NMEA_START[1] = "$";
 static const char NMEA_END[2]   = "\r\n";
 /**
  * @brief Raw parse NMEA messages
- * 
- * @param line 
- * @param msg 
+ *
+ * @param line
+ * @param msg
  */
 NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
     char* end;
@@ -365,10 +385,10 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
     }
     *end = '\0';
     // Find Talker ID
-    msg->Header.Id = (uint8_t) Str_binarySearch(NMEA_TALKER_IDS, NMEA_TALKER_IDS_LEN, line, NMEA_compareTalkerId);
+    msg->Header.Id = (uint8_t) Mem_binarySearch(NMEA_TALKER_IDS, NMEA_TALKER_IDS_LEN, NMEA_TALKER_ID_LEN, line, NMEA_compareTalkerId);
     line += NMEA_TALKER_ID_LEN;
     // Find Message Type
-    msg->Header.Type = (uint8_t) Str_binarySearch(NMEA_MESSAGE_IDS, NMEA_MESSAGE_IDS_LEN, line, NMEA_compareMessageType);
+    msg->Header.Type = (uint8_t) Mem_binarySearch(NMEA_MESSAGE_IDS, NMEA_MESSAGE_IDS_LEN, NMEA_MESSAGE_ID_LEN, line, NMEA_compareMessageType);
     line += NMEA_MESSAGE_ID_LEN;
     // Find Checksum
     end = Str_indexOf(line, '*');
@@ -395,17 +415,17 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
 #if NMEA_SUPPORT_MODULAR
 /**
  * @brief Initialize NMEA structure with default values
- * 
- * @param nmea 
+ *
+ * @param nmea
  */
 void NMEA_init(NMEA* nmea) {
     Mem_set(nmea, 0, sizeof(NMEA));
 }
 /**
  * @brief NMEA parse line and call callbacks
- * 
- * @param nmea 
- * @param line 
+ *
+ * @param nmea
+ * @param line
  */
 void NMEA_parse(NMEA* nmea, char* line) {
     NMEA_Message msg;
@@ -422,10 +442,10 @@ void NMEA_parse(NMEA* nmea, char* line) {
 }
 /**
  * @brief Set callback for message
- * 
- * @param nmea 
- * @param type 
- * @param fn 
+ *
+ * @param nmea
+ * @param type
+ * @param fn
  */
 void NMEA_onMessage(NMEA* nmea, NMEA_MessageType type, NMEA_OnMessageFn fn) {
 #if NMEA_SUPPORT_MULTI_CALLBACK
@@ -438,9 +458,9 @@ void NMEA_onMessage(NMEA* nmea, NMEA_MessageType type, NMEA_OnMessageFn fn) {
 #if NMEA_SUPPORT_ISTREAM
 /**
  * @brief Handle NMEA messages from input stream
- * 
- * @param nmea 
- * @param input 
+ *
+ * @param nmea
+ * @param input
  */
 void NMEA_handle(NMEA* nmea, IStream* input) {
     if (IStream_available(input) > 0) {
@@ -448,13 +468,13 @@ void NMEA_handle(NMEA* nmea, IStream* input) {
         Stream_LenType start;
         Stream_LenType len;
         // Find Start if message
-        while ((start = IStream_findByte(input, NMEA_START[0])) >= 0) {
+        while ((start = IStream_findByte(input, (uint8_t) NMEA_START[0])) >= 0) {
             // Trim start
             if (start > 0) {
                 IStream_ignore(input, start);
             }
             // Read until end
-            if ((len = IStream_readBytesUntilPattern(input, NMEA_END, sizeof(NMEA_END), (uint8_t*) line, sizeof(line))) == 0) {
+            if ((len = IStream_readBytesUntilPattern(input, (uint8_t*) NMEA_END, sizeof(NMEA_END), (uint8_t*) line, sizeof(line))) == 0) {
                 // No end found
                 break;
             }
@@ -469,18 +489,18 @@ void NMEA_handle(NMEA* nmea, IStream* input) {
 #if NMEA_SUPPORT_ARGS
 /**
  * @brief Set args to NMEA structure
- * 
- * @param nmea 
- * @param args 
+ *
+ * @param nmea
+ * @param args
  */
 void  NMEA_setArgs(NMEA* nmea, void* args) {
     nmea->Args = args;
 }
 /**
  * @brief Get args from NMEA structure
- * 
- * @param nmea 
- * @return void* 
+ *
+ * @param nmea
+ * @return void*
  */
 void* NMEA_getArgs(NMEA* nmea) {
     return nmea->Args;
@@ -490,15 +510,15 @@ void* NMEA_getArgs(NMEA* nmea) {
 #endif // NMEA_SUPPORT_MODULAR
 
 // ---------------------------------- Private APIs ------------------------------
-static Str_CmpResult NMEA_compareTalkerId(const char* itemA, const char* itemB) {
-    return Str_compareFix(itemA, itemB, NMEA_TALKER_ID_LEN);
+static Mem_CmpResult NMEA_compareTalkerId(const char* itemA, const char* itemB) {
+    return Mem_compare(itemA, itemB, NMEA_TALKER_ID_LEN);
 }
-static Str_CmpResult NMEA_compareMessageType(const char* itemA, const char* itemB) {
-    return Str_compareFix(itemA, itemB, NMEA_MESSAGE_ID_LEN);
+static Mem_CmpResult NMEA_compareMessageType(const char* itemA, const char* itemB) {
+    return Mem_compare(itemA, itemB, NMEA_MESSAGE_ID_LEN);
 }
 // Basic Field Parser
-static NMEA_Result NMEA_Field_Char_parse(char** line, char* val) {
-    *val = **line;
+static NMEA_Result NMEA_Field_Char_parse(char* line, char* val) {
+    *val = *line;
     return NMEA_Result_Ok;
 }
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
@@ -548,12 +568,12 @@ static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
     }
     time->Hours = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertUNum(&line[2], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumFix(&line[2], &num, Str_Decimal, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     time->Minutes = (uint8_t) num;
     // Seconds
-    if ((result = Str_convertUNum(&line[4], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumFix(&line[4], &num, Str_Decimal, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     time->Seconds = (uint8_t) num;
@@ -561,6 +581,7 @@ static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
     if ((result = Str_convertUNum(&line[7], &num, Str_Decimal))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
+    time->Milliseconds = (uint16_t) num;
 
     return NMEA_Result_Ok;
 }
@@ -573,12 +594,12 @@ static NMEA_Result NMEA_Field_Date_parse(char* line, NMEA_Date* date) {
     }
     date->Day = (uint8_t) num;
     // Month
-    if ((result = Str_convertUNum(&line[2], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumFix(&line[2], &num, Str_Decimal, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     date->Month = (uint8_t) num;
     // Year
-    if ((result = Str_convertUNum(&line[4], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumFix(&line[4], &num, Str_Decimal, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     date->Year = (uint16_t) num;
@@ -592,14 +613,14 @@ static NMEA_Result NMEA_Field_PositionFix_parse(char* line, uint8_t* pos) {
         return result;
     }
     // Verify Value
-    if (pos != NMEA_PositionFix_NotValid || 
-        pos != NMEA_PositionFix_GPS || 
-        pos != NMEA_PositionFix_DifferentialGPS || 
-        pos != NMEA_PositionFix_DeadReckoning
+    if (*pos != NMEA_PositionFix_NotValid &&
+        *pos != NMEA_PositionFix_GPS &&
+        *pos != NMEA_PositionFix_DifferentialGPS &&
+        *pos != NMEA_PositionFix_DeadReckoning
     ) {
         return NMEA_Result_PositionFixInvalid;
     }
-    
+
     return NMEA_Result_Ok;
 }
 static NMEA_Result NMEA_Field_MessageStatus_parse(char* line, uint8_t* status) {
@@ -608,8 +629,8 @@ static NMEA_Result NMEA_Field_MessageStatus_parse(char* line, uint8_t* status) {
         return result;
     }
     // Verify Value
-    if (status != NMEA_MessageStatus_NotValid || 
-        status != NMEA_MessageStatus_Valid
+    if (*status != NMEA_MessageStatus_NotValid &&
+        *status != NMEA_MessageStatus_Valid
     ) {
         return NMEA_Result_MessageStatusInvalid;
     }
@@ -622,9 +643,9 @@ static NMEA_Result NMEA_Field_Mode_parse(char* line, uint8_t* mode) {
         return result;
     }
     // Verify Value
-    if (mode != NMEA_Mode_Autonomous || 
-        mode != NMEA_Mode_DGPS || 
-        mode != NMEA_Mode_DeadReckoning
+    if (*mode != NMEA_Mode_Autonomous &&
+        *mode != NMEA_Mode_DGPS &&
+        *mode != NMEA_Mode_DeadReckoning
     ) {
         return NMEA_Result_ModeInvalid;
     }
@@ -637,8 +658,8 @@ static NMEA_Result NMEA_Field_GSA_Mode_parse(char* line, uint8_t* mode) {
         return result;
     }
     // Verify Value
-    if (mode != NMEA_GSA_Mode_Auto || 
-        mode != NMEA_GSA_Mode_Manual
+    if (*mode != NMEA_GSA_Mode_Auto &&
+        *mode != NMEA_GSA_Mode_Manual
     ) {
         return NMEA_Result_GSAModeInvalid;
     }
@@ -651,9 +672,9 @@ static NMEA_Result NMEA_Field_FixStatus_parse(char* line, uint8_t* mode) {
         return result;
     }
     // Verify Value
-    if (mode != NMEA_FixStatus_NotFix || 
-        mode != NMEA_FixStatus_2D || 
-        mode != NMEA_FixStatus_3D
+    if (*mode != NMEA_FixStatus_NotFix &&
+        *mode != NMEA_FixStatus_2D &&
+        *mode != NMEA_FixStatus_3D
     ) {
         return NMEA_Result_FixStatusInvalid;
     }
@@ -674,25 +695,12 @@ static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor) {
     if ((result = Str_convertFloat(&line[2], &cor->Minutes)) != Str_Ok) {
         return result | NMEA_Result_Custom;
     }
-    // Indicator
-    end = Str_indexOf(line, ',');
-    if (end == NULL) {
-        return NMEA_Result_LatitudeFormatInvalid;
-    }
-    cor->Indicator = *(end + 1);
-    // Verify Indicator
-    if (cor->Indicator != NMEA_Indicator_North || 
-        cor->Indicator != NMEA_Indicator_South
-    ) {
-        return NMEA_Result_LatitudeIndicatorInvalid;
-    }
 
     return NMEA_Result_Ok;
 }
 static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) {
     Str_UNum num;
     NMEA_Result result;
-    char* end;
 
     // Degrees
     if ((result = Str_convertUNumFix(line, &num, Str_Decimal, 3)) != Str_Ok) {
@@ -703,14 +711,24 @@ static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) 
     if ((result = Str_convertFloat(&line[3], &cor->Minutes)) != Str_Ok) {
         return result | NMEA_Result_Custom;
     }
-    // Indicator
-    end = Str_indexOf(line, ',');
-    if (end == NULL) {
-        return NMEA_Result_LongitudeFormatInvalid;
-    }
-    cor->Indicator = *(end + 1);
+
+    return NMEA_Result_Ok;
+}
+static NMEA_Result NMEA_Field_LatitudeIndicator_parse(char* line, NMEA_Coordinate* cor) {
+    cor->Indicator = (NMEA_Indicator) *line;
     // Verify Indicator
-    if (cor->Indicator != NMEA_Indicator_East || 
+    if (cor->Indicator != NMEA_Indicator_North &&
+        cor->Indicator != NMEA_Indicator_South
+    ) {
+        return NMEA_Result_LatitudeIndicatorInvalid;
+    }
+
+    return NMEA_Result_Ok;
+}
+static NMEA_Result NMEA_Field_LongitudeIndicator_parse(char* line, NMEA_Coordinate* cor) {
+    cor->Indicator = (NMEA_Indicator) *line;
+    // Verify Indicator
+    if (cor->Indicator != NMEA_Indicator_East &&
         cor->Indicator != NMEA_Indicator_West
     ) {
         return NMEA_Result_LongitudeIndicatorInvalid;
@@ -718,20 +736,14 @@ static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) 
 
     return NMEA_Result_Ok;
 }
-static NMEA_Result NMEA_Field_MagneticVariation_parse(char* line, NMEA_MagneticVariation* mag) {
-    static const NMEA_Field MAGNETIC_VARIATIONS_FIELDS[] = {
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_Float_parse, .Index = 0, .Offset = (uint8_t) &((const NMEA_MagneticVariation*) 0)->Degrees },
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_Char_parse,  .Index = 1, .Offset = (uint8_t) &((const NMEA_MagneticVariation*) 0)->Indicator },
-    };
-    static const NMEA_FieldList MAGNETIC_VARIATIONS_FIELDS_LIST = { .Fields = MAGNETIC_VARIATIONS_FIELDS, .Len = 2 };
-
+static NMEA_Result NMEA_Field_MagneticVariationIndicator_parse(char* line, NMEA_MagneticVariation* mag) {
     NMEA_Result result;
-    // Parse Fields
-    if ((result = NMEA_FieldList_parse(&MAGNETIC_VARIATIONS_FIELDS_LIST, line, mag)) != NMEA_Result_Ok) {
+    if ((result = NMEA_Field_Char_parse(line, (char*) &mag->Indicator)) != NMEA_Result_Ok) {
         return result;
     }
+
     // Verify Indicator
-    if (mag->Indicator != NMEA_Indicator_East || 
+    if (mag->Indicator != NMEA_Indicator_East &&
         mag->Indicator != NMEA_Indicator_West
     ) {
         return NMEA_Result_MagneticVariationIndicatorInvalid;
@@ -739,20 +751,6 @@ static NMEA_Result NMEA_Field_MagneticVariation_parse(char* line, NMEA_MagneticV
 
     return NMEA_Result_Ok;
 }
-static NMEA_Result NMEA_Field_SatelliteInView_parse(char* line, NMEA_SatelliteInView* sat) {
-    static const NMEA_Field SATELLITE_IN_VIEW_FIELDS[] = {
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_UInt8_parse,  .Index = 0, .Offset = (uint8_t) &((const NMEA_SatelliteInView*) 0)->Id },
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_UInt8_parse,  .Index = 1, .Offset = (uint8_t) &((const NMEA_SatelliteInView*) 0)->Elevation },
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_UInt16_parse, .Index = 2, .Offset = (uint8_t) &((const NMEA_SatelliteInView*) 0)->Azimuth },
-        { .parse = (NMEA_ParseFieldFn) NMEA_Field_UInt8_parse,  .Index = 3, .Offset = (uint8_t) &((const NMEA_SatelliteInView*) 0)->SNR },
-    };
-    static const NMEA_FieldList SATELLITE_IN_VIEW_FIELD_LIST = { .Fields = SATELLITE_IN_VIEW_FIELDS, .Len = 4 };
-    
-    NMEA_Result result;
-
-    return NMEA_FieldList_parse(&SATELLITE_IN_VIEW_FIELD_LIST, line, sat);
-}
-
 static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NMEA_Message* msg) {
     NMEA_Result result;
     NMEA_Field* field = f->Fields;
