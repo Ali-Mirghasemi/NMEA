@@ -13,6 +13,9 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="../../Src" />
+					<Add directory="../../../Str/Src" />
+					<Add directory="../../../Stream/Src" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -31,6 +34,18 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="../../../Str/Src/Str.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../Stream/Src/InputStream.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../Stream/Src/StreamBuffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../Src/NMEA.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>

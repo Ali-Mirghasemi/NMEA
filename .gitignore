@@ -1,2 +1,5 @@
-Examples/NMEA-Test/NMEA-Test.layout
 .vscode
+Examples/*/NMEA-Test.layout
+Examples/*/bin
+Examples/*/obj
+*.depend
