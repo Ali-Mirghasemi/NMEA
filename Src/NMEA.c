@@ -528,7 +528,7 @@ static NMEA_Result NMEA_Field_Char_parse(char* line, char* val) {
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNum(line, &num, Str_Decimal))) {
+    if ((result = Str_convertUNumDecimal(line, &num))) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint8_t) num;
@@ -538,7 +538,7 @@ static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
 static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNum(line, &num, Str_Decimal))) {
+    if ((result = Str_convertUNumDecimal(line, &num))) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint16_t) num;
@@ -548,7 +548,7 @@ static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
 static NMEA_Result NMEA_Field_UInt32_parse(char* line, uint32_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNum(line, &num, Str_Decimal))) {
+    if ((result = Str_convertUNumDecimal(line, &num))) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint32_t) num;
@@ -567,24 +567,24 @@ static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
     Str_UNum num = 0;
     Str_Result result;
     // Hour
-    if ((result = Str_convertUNumFix(&line[0], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     time->Hours = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertUNumFix(&line[2], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     time->Minutes = (uint8_t) num;
     // Seconds
-    if ((result = Str_convertUNumFix(&line[4], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     time->Seconds = (uint8_t) num;
     // Check there is millis
     if (line[6] == '.') {
         // Milliseconds
-        if ((result = Str_convertUNum(&line[7], &num, Str_Decimal))) {
+        if ((result = Str_convertUNumDecimal(&line[7], &num))) {
             return (NMEA_Result) result | NMEA_Result_Custom;
         }
         time->Milliseconds = (uint16_t) num;
@@ -599,17 +599,17 @@ static NMEA_Result NMEA_Field_Date_parse(char* line, NMEA_Date* date) {
     Str_UNum num = 0;
     Str_Result result;
     // Day
-    if ((result = Str_convertUNumFix(&line[0], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     date->Day = (uint8_t) num;
     // Month
-    if ((result = Str_convertUNumFix(&line[2], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     date->Month = (uint8_t) num;
     // Year
-    if ((result = Str_convertUNumFix(&line[4], &num, Str_Decimal, 2))) {
+    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2))) {
         return (NMEA_Result) result | NMEA_Result_Custom;
     }
     date->Year = (uint16_t) num;
@@ -691,7 +691,7 @@ static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor) {
     char* end;
 
     // Degrees
-    if ((result = Str_convertUNumFix(line, &num, Str_Decimal, 2)) != Str_Ok) {
+    if ((result = Str_convertUNumDecimalFix(line, &num, 2)) != Str_Ok) {
         return result | NMEA_Result_Custom;
     }
     cor->Degrees = (uint8_t) num;
@@ -707,7 +707,7 @@ static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) 
     NMEA_Result result;
 
     // Degrees
-    if ((result = Str_convertUNumFix(line, &num, Str_Decimal, 3)) != Str_Ok) {
+    if ((result = Str_convertUNumDecimalFix(line, &num, 3)) != Str_Ok) {
         return result | NMEA_Result_Custom;
     }
     cor->Degrees = (uint8_t) num;
