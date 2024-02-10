@@ -112,51 +112,411 @@ uint32_t Test_GGA(void) {
             .HDOP = 0.85f,
             .Altitude = 1236.4f,
             .AltitudeUnit = 'M',
-            .Geoid = -17.6f, 
+            .Geoid = -17.6f,
             .GeoidUnits = 'M',
             .AgeOfDiff = 0,
             .DiffRefStationId = 0,
         },
     };
     Str_copy(temp, "$GPGGA,071457.00,3541.68513,N,05123.50382,E,2,11,0.85,1236.4,M,-17.6,M,,0000*4E\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
     assert(Result, NMEA_parseRaw(temp, &msg));
     assert(Message, &msg, &MSG1);
+
+    const NMEA_Message MSG2 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GGA,
+        },
+        .Checksum = 0x4E,
+        .GGA = {
+            .Time = {
+                .Hours = 17,
+                .Minutes = 19,
+                .Seconds = 56,
+                .Milliseconds = 500,
+            },
+            .Latitude = {
+                .Degrees = 38,
+                .Minutes = 46.68513f,
+                .Indicator = NMEA_Indicator_South,
+            },
+            .Longitude = {
+                .Degrees = 14,
+                .Minutes = 23.50382f,
+                .Indicator = NMEA_Indicator_West,
+            },
+            .PositionFix = NMEA_PositionFix_DifferentialGPS,
+            .SatellitesUsed = 11,
+            .HDOP = 0.85f,
+            .Altitude = 100.4f,
+            .AltitudeUnit = 'M',
+            .Geoid = -19.7f,
+            .GeoidUnits = 'M',
+            .AgeOfDiff = 0,
+            .DiffRefStationId = 0,
+        },
+    };
+    Str_copy(temp, "$GPGGA,171956.500,3846.68513,S,01423.50382,W,2,11,0.85,100.4,M,-19.7,M,,0000*4E\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG2);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_GLL
 uint32_t Test_GLL(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GLL,
+        },
+        .Checksum = 0x6F,
+        .GLL = {
+            .Latitude = {
+                .Degrees = 35,
+                .Minutes = 41.68513f,
+                .Indicator = NMEA_Indicator_North,
+            },
+            .Longitude = {
+                .Degrees = 51,
+                .Minutes = 23.50382f,
+                .Indicator = NMEA_Indicator_East,
+            },
+            .Time = {
+                .Hours = 7,
+                .Minutes = 14,
+                .Seconds = 57,
+                .Milliseconds = 0,
+            },
+            .Status = NMEA_MessageStatus_Valid,
+            .Mode = NMEA_Mode_DGPS,
+        },
+    };
+    Str_copy(temp, "$GPGLL,3541.68513,N,05123.50382,E,071457.00,A,D*6F\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
+
+    const NMEA_Message MSG2 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GLL,
+        },
+        .Checksum = 0x69,
+        .GLL = {
+            .Latitude = {
+                .Degrees = 35,
+                .Minutes = 41.68521f,
+                .Indicator = NMEA_Indicator_North,
+            },
+            .Longitude = {
+                .Degrees = 51,
+                .Minutes = 23.50386f,
+                .Indicator = NMEA_Indicator_East,
+            },
+            .Time = {
+                .Hours = 7,
+                .Minutes = 15,
+                .Seconds = 0,
+                .Milliseconds = 0,
+            },
+            .Status = NMEA_MessageStatus_Valid,
+            .Mode = NMEA_Mode_DGPS,
+        },
+    };
+    Str_copy(temp, "$GPGLL,3541.68521,N,05123.50386,E,071500.00,A,D*69\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG2);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_GSA
 uint32_t Test_GSA(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GSA,
+        },
+        .Checksum = 0x03,
+        .GSA = {
+            .Mode = NMEA_GSA_Mode_Auto,
+            .FixStatus = NMEA_FixStatus_3D,
+            .SatellitesUsed = {24, 02, 15, 17, 30, 06, 13, 28, 12, 19, 40},
+            .PDOP = 1.72f,
+            .HDOP = 0.85f,
+            .VDOP = 1.49f,
+        },
+    };
+    Str_copy(temp, "$GPGSA,A,3,24,02,15,17,30,06,13,28,12,19,40,,1.72,0.85,1.49*03\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
+
+    const NMEA_Message MSG2 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GSA,
+        },
+        .Checksum = 0x33,
+        .GSA = {
+            .Mode = NMEA_GSA_Mode_Auto,
+            .FixStatus = NMEA_FixStatus_3D,
+            .SatellitesUsed = {7, 2, 26, 27, 9, 4, 15},
+            .PDOP = 1.8f,
+            .HDOP = 1.0f,
+            .VDOP = 1.5f,
+        },
+    };
+    Str_copy(temp, "$GPGSA,A,3,07,02,26,27,09,04,15,,,,,,1.8,1.0,1.5*33\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG2);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_GSV
 uint32_t Test_GSV(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GSV,
+        },
+        .Checksum = 0x71,
+        .GSV = {
+            .TotalMessages = 2,
+            .MessageNumber = 1,
+            .SatellitesInView = 7,
+            .Satellites = {
+                {
+                    .Id = 7,
+                    .Elevation = 79,
+                    .Azimuth = 48,
+                    .SNR = 42,
+                },
+                {
+                    .Id = 2,
+                    .Elevation = 51,
+                    .Azimuth = 62,
+                    .SNR = 43,
+                },
+                {
+                    .Id = 26,
+                    .Elevation = 36,
+                    .Azimuth = 256,
+                    .SNR = 42,
+                },
+                {
+                    .Id = 27,
+                    .Elevation = 27,
+                    .Azimuth = 138,
+                    .SNR = 42,
+                },
+            },
+        },
+    };
+    Str_copy(temp, "$GPGSV,2,1,07,07,79,048,42,02,51,062,43,26,36,256,42,27,27,138,42*71\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
+
+    const NMEA_Message MSG2 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_GSV,
+        },
+        .Checksum = 0x41,
+        .GSV = {
+            .TotalMessages = 2,
+            .MessageNumber = 2,
+            .SatellitesInView = 7,
+            .Satellites = {
+                {
+                    .Id = 9,
+                    .Elevation = 23,
+                    .Azimuth = 313,
+                    .SNR = 42,
+                },
+                {
+                    .Id = 4,
+                    .Elevation = 19,
+                    .Azimuth = 159,
+                    .SNR = 41,
+                },
+                {
+                    .Id = 15,
+                    .Elevation = 12,
+                    .Azimuth = 41,
+                    .SNR = 42,
+                },
+            },
+        },
+    };
+    Str_copy(temp, "$GPGSV,2,2,07,09,23,313,42,04,19,159,41,15,12,041,42*41\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG2);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_RMC
 uint32_t Test_RMC(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_RMC,
+        },
+        .Checksum = 0x10,
+        .RMC = {
+            .Time = {
+                .Hours = 16,
+                .Minutes = 12,
+                .Seconds = 29,
+                .Milliseconds = 487,
+            },
+            .Status = NMEA_MessageStatus_Valid,
+            .Latitude = {
+                .Degrees = 37,
+                .Minutes = 23.2475f,
+                .Indicator = NMEA_Indicator_North,
+            },
+            .Longitude = {
+                .Degrees = 121,
+                .Minutes = 58.3416f,
+                .Indicator = NMEA_Indicator_West,
+            },
+            .SpeedOverGround = 0.13f,
+            .CourseOverGround = 309.62f,
+            .Date = {
+                .Day = 12,
+                .Month = 5,
+                .Year = 98,
+            },
+        },
+    };
+    Str_copy(temp, "$GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120598,,*10\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
+
+    const NMEA_Message MSG2 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_RMC,
+        },
+        .Checksum = 0x7E,
+        .RMC = {
+            .Time = {
+                .Hours = 7,
+                .Minutes = 14,
+                .Seconds = 56,
+                .Milliseconds = 0,
+            },
+            .Status = NMEA_MessageStatus_Valid,
+            .Latitude = {
+                .Degrees = 35,
+                .Minutes = 41.68511f,
+                .Indicator = NMEA_Indicator_North,
+            },
+            .Longitude = {
+                .Degrees = 51,
+                .Minutes = 23.50384f,
+                .Indicator = NMEA_Indicator_East,
+            },
+            .SpeedOverGround = 0.012f,
+            .CourseOverGround = 0.0f,
+            .Date = {
+                .Day = 18,
+                .Month = 5,
+                .Year = 20,
+            },
+        },
+    };
+    Str_copy(temp, "$GPRMC,071456.00,A,3541.68511,N,05123.50384,E,0.012,,180520,,,D*7E\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG2);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_VTG
 uint32_t Test_VTG(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_VTG,
+        },
+        .Checksum = 0x23,
+        .VTG = {
+            .Course1 = 309.62f,
+            .Reference1 = 'T',
+            .Course2 = 0.0f,
+            .Reference2 = 'M',
+            .Speed1 = 0.13f,
+            .SpeedUnits1 = 'N',
+            .Speed2 = 0.2f,
+            .SpeedUnits2 = 'K',
+            .Mode = NMEA_Mode_Autonomous,
+        },
+    };
+    Str_copy(temp, "$GPVTG,309.62,T,,M,0.13,N,0.2,K,A*23\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
 
     return 0;
 }
 #endif
 #if NMEA_MESSAGE_ZDA
 uint32_t Test_ZDA(void) {
+    NMEA_Message msg;
+    char temp[128];
+
+    const NMEA_Message MSG1 = {
+        .Header = {
+            .Id = NMEA_Id_GPS,
+            .Type = NMEA_MessageType_ZDA,
+        },
+        .Checksum = 0x4F,
+        .ZDA = {
+            .Time = {
+                .Hours = 18,
+                .Minutes = 18,
+                .Seconds = 13,
+                .Milliseconds = 0,
+            },
+            .Day = 14,
+            .Month = 10,
+            .Year = 2003,
+            .LocalZoneHours = 0,
+            .LocalZoneMinutes = 0,
+        },
+    };
+    Str_copy(temp, "$GPZDA,181813,14,10,2003,00,00*4F\r\n");
+    Mem_set(&msg, 0, sizeof(msg));
+    assert(Result, NMEA_parseRaw(temp, &msg));
+    assert(Message, &msg, &MSG1);
 
     return 0;
 }
@@ -214,55 +574,37 @@ uint32_t Assert_Message(NMEA_Message* msg1, NMEA_Message* msg2, uint32_t line) {
     #endif
     #if NMEA_MESSAGE_GLL
         case NMEA_MessageType_GLL:
-            if (Mem_compare(&msg1->GLL, &msg2->GLL, sizeof(msg2->GLL)) != 0) {
-                PRINTF("GLL Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_GLL, &msg1->GLL, &msg2->GLL);
             break;
     #endif
     #if NMEA_MESSAGE_GSA
         case NMEA_MessageType_GSA:
-            if (Mem_compare(&msg1->GSA, &msg2->GSA, sizeof(msg2->GSA)) != 0) {
-                PRINTF("GSA Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_GSA, &msg1->GSA, &msg2->GSA);
             break;
     #endif
     #if NMEA_MESSAGE_GSV
         case NMEA_MessageType_GSV:
-            if (Mem_compare(&msg1->GSV, &msg2->GSV, sizeof(msg2->GSV)) != 0) {
-                PRINTF("GSV Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_GSV, &msg1->GSV, &msg2->GSV);
             break;
     #endif
     #if NMEA_MESSAGE_RMC
         case NMEA_MessageType_RMC:
-            if (Mem_compare(&msg1->RMC, &msg2->RMC, sizeof(msg2->RMC)) != 0) {
-                PRINTF("RMC Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_RMC, &msg1->RMC, &msg2->RMC);
             break;
     #endif
     #if NMEA_MESSAGE_VTG
         case NMEA_MessageType_VTG:
-            if (Mem_compare(&msg1->VTG, &msg2->VTG, sizeof(msg2->VTG)) != 0) {
-                PRINTF("VTG Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_VTG, &msg1->VTG, &msg2->VTG);
             break;
     #endif
     #if NMEA_MESSAGE_ZDA
         case NMEA_MessageType_ZDA:
-            if (Mem_compare(&msg1->ZDA, &msg2->ZDA, sizeof(msg2->ZDA)) != 0) {
-                PRINTF("ZDA Error\r\n");
-                return Str_Error | line << 1;
-            }
+            assert(Message_ZDA, &msg1->ZDA, &msg2->ZDA);
             break;
     #endif
     }
 
-    return (uint32_t) Str_Ok;
+    return 0;
 }
 uint32_t Assert_Message_GGA(NMEA_Message_GGA* msg1, NMEA_Message_GGA* msg2, uint32_t line) {
 #if NMEA_MESSAGE_GGA_TIME
@@ -311,23 +653,172 @@ uint32_t Assert_Message_GGA(NMEA_Message_GGA* msg1, NMEA_Message_GGA* msg2, uint
     return 0;
 
 }
-uint32_t Assert_Message_GLL(NMEA_Message_GLL* msg1, NMEA_Message_GLL* msg2, uint32_t line);
-uint32_t Assert_Message_GSA(NMEA_Message_GSA* msg1, NMEA_Message_GSA* msg2, uint32_t line);
-uint32_t Assert_Message_GSV(NMEA_Message_GSV* msg1, NMEA_Message_GSV* msg2, uint32_t line);
-uint32_t Assert_Message_RMC(NMEA_Message_RMC* msg1, NMEA_Message_RMC* msg2, uint32_t line);
-uint32_t Assert_Message_VTG(NMEA_Message_VTG* msg1, NMEA_Message_VTG* msg2, uint32_t line);
-uint32_t Assert_Message_ZDA(NMEA_Message_ZDA* msg1, NMEA_Message_ZDA* msg2, uint32_t line);
+uint32_t Assert_Message_GLL(NMEA_Message_GLL* msg1, NMEA_Message_GLL* msg2, uint32_t line) {
+#if NMEA_MESSAGE_GLL_LATITUDE
+    assert(Num, msg1->Latitude.Degrees, msg2->Latitude.Degrees);
+    assert(Float, msg1->Latitude.Minutes, msg2->Latitude.Minutes);
+    assert(Num, msg1->Latitude.Indicator, msg2->Latitude.Indicator);
+#endif
+#if NMEA_MESSAGE_GLL_LONGITUDE
+    assert(Num, msg1->Longitude.Degrees, msg2->Longitude.Degrees);
+    assert(Float, msg1->Longitude.Minutes, msg2->Longitude.Minutes);
+    assert(Num, msg1->Longitude.Indicator, msg2->Longitude.Indicator);
+#endif
+#if NMEA_MESSAGE_GLL_TIME
+    assert(Num, msg1->Time.Hours, msg2->Time.Hours);
+    assert(Num, msg1->Time.Minutes, msg2->Time.Minutes);
+    assert(Num, msg1->Time.Seconds, msg2->Time.Seconds);
+    assert(Num, msg1->Time.Milliseconds, msg2->Time.Milliseconds);
+#endif
+#if NMEA_MESSAGE_GLL_STATUS
+    assert(Num, msg1->Status, msg2->Status);
+#endif
+#if NMEA_MESSAGE_GLL_MODE
+    assert(Num, msg1->Mode, msg2->Mode);
+#endif
+    return 0;
+}
+uint32_t Assert_Message_GSA(NMEA_Message_GSA* msg1, NMEA_Message_GSA* msg2, uint32_t line) {
+#if NMEA_MESSAGE_GSA_MODE
+    assert(Num, msg1->Mode, msg2->Mode);
+#endif
+#if NMEA_MESSAGE_GSA_FIX_STATUS
+    assert(Num, msg1->FixStatus, msg2->FixStatus);
+#endif
+#if NMEA_MESSAGE_GSA_SATELLITESUSED
+    for (int i = 0; i < NMEA_GSA_MAX_SATELLITES; i++) {
+        assert(Num, msg1->SatellitesUsed[i], msg2->SatellitesUsed[i]);
+    }
+#endif
+#if NMEA_MESSAGE_GSA_PDOP
+    assert(Float, msg1->PDOP, msg2->PDOP);
+#endif
+#if NMEA_MESSAGE_GSA_HDOP
+    assert(Float, msg1->HDOP, msg2->HDOP);
+#endif
+#if NMEA_MESSAGE_GSA_VDOP
+    assert(Float, msg1->VDOP, msg2->VDOP);
+#endif
+    return 0;
+}
+uint32_t Assert_Message_GSV(NMEA_Message_GSV* msg1, NMEA_Message_GSV* msg2, uint32_t line) {
+#if NMEA_MESSAGE_GSV_TOTALMESSAGES
+    assert(Num, msg1->TotalMessages, msg2->TotalMessages);
+#endif
+#if NMEA_MESSAGE_GSV_MESSAGENUMBER
+    assert(Num, msg1->MessageNumber, msg2->MessageNumber);
+#endif
+#if NMEA_MESSAGE_GSV_SATELLITESINVIEW
+    assert(Num, msg1->SatellitesInView, msg2->SatellitesInView);
+#endif
+#if NMEA_MESSAGE_GSV_SATELLITES
+    for (int i = 0; i < NMEA_GSV_MAX_SATELLITES; i++) {
+        assert(Num, msg1->Satellites[i].Id,         msg2->Satellites[i].Id);
+        assert(Num, msg1->Satellites[i].Elevation,  msg2->Satellites[i].Elevation);
+        assert(Num, msg1->Satellites[i].Azimuth,    msg2->Satellites[i].Azimuth);
+        assert(Num, msg1->Satellites[i].SNR,        msg2->Satellites[i].SNR);
+    }
+#endif
+    return 0;
+}
+uint32_t Assert_Message_RMC(NMEA_Message_RMC* msg1, NMEA_Message_RMC* msg2, uint32_t line) {
+#if NMEA_MESSAGE_RMC_TIME
+    assert(Num, msg1->Time.Hours, msg2->Time.Hours);
+    assert(Num, msg1->Time.Minutes, msg2->Time.Minutes);
+    assert(Num, msg1->Time.Seconds, msg2->Time.Seconds);
+    assert(Num, msg1->Time.Milliseconds, msg2->Time.Milliseconds);
+#endif
+#if NMEA_MESSAGE_RMC_STATUS
+    assert(Num, msg1->Status, msg2->Status);
+#endif
+#if NMEA_MESSAGE_RMC_LATITUDE
+    assert(Num, msg1->Latitude.Degrees, msg2->Latitude.Degrees);
+    assert(Float, msg1->Latitude.Minutes, msg2->Latitude.Minutes);
+    assert(Num, msg1->Latitude.Indicator, msg2->Latitude.Indicator);
+#endif
+#if NMEA_MESSAGE_RMC_LONGITUDE
+    assert(Num, msg1->Longitude.Degrees, msg2->Longitude.Degrees);
+    assert(Float, msg1->Longitude.Minutes, msg2->Longitude.Minutes);
+    assert(Num, msg1->Longitude.Indicator, msg2->Longitude.Indicator);
+#endif
+#if NMEA_MESSAGE_RMC_SPEEDOVERGROUND
+    assert(Float, msg1->SpeedOverGround, msg2->SpeedOverGround);
+#endif
+#if NMEA_MESSAGE_RMC_COURSEOVERGROUND
+    assert(Float, msg1->CourseOverGround, msg2->CourseOverGround);
+#endif
+#if NMEA_MESSAGE_RMC_DATE
+    assert(Num, msg1->Date.Day, msg2->Date.Day);
+    assert(Num, msg1->Date.Month, msg2->Date.Month);
+    assert(Num, msg1->Date.Year, msg2->Date.Year);
+#endif
+    return 0;
+}
+uint32_t Assert_Message_VTG(NMEA_Message_VTG* msg1, NMEA_Message_VTG* msg2, uint32_t line) {
+#if NMEA_MESSAGE_VTG_COURSE1
+    assert(Float, msg1->Course1, msg2->Course1);
+#endif
+#if NMEA_MESSAGE_VTG_REFERENCE1
+    assert(Num, msg1->Reference1, msg2->Reference1);
+#endif
+#if NMEA_MESSAGE_VTG_COURSE2
+    assert(Float, msg1->Course2, msg2->Course2);
+#endif
+#if NMEA_MESSAGE_VTG_REFERENCE2
+    assert(Num, msg1->Reference2, msg2->Reference2);
+#endif
+#if NMEA_MESSAGE_VTG_SPEED1
+    assert(Float, msg1->Speed1, msg2->Speed1);
+#endif
+#if NMEA_MESSAGE_VTG_SPEEDUNITS1
+    assert(Num, msg1->SpeedUnits1, msg2->SpeedUnits1);
+#endif
+#if NMEA_MESSAGE_VTG_SPEED2
+    assert(Float, msg1->Speed2, msg2->Speed2);
+#endif
+#if NMEA_MESSAGE_VTG_SPEEDUNITS2
+    assert(Num, msg1->SpeedUnits2, msg2->SpeedUnits2);
+#endif
+#if NMEA_MESSAGE_VTG_MODE
+    assert(Num, msg1->Mode, msg2->Mode);
+#endif
+    return 0;
+}
+uint32_t Assert_Message_ZDA(NMEA_Message_ZDA* msg1, NMEA_Message_ZDA* msg2, uint32_t line) {
+#if NMEA_MESSAGE_ZDA_TIME
+    assert(Num, msg1->Time.Hours, msg2->Time.Hours);
+    assert(Num, msg1->Time.Minutes, msg2->Time.Minutes);
+    assert(Num, msg1->Time.Seconds, msg2->Time.Seconds);
+    assert(Num, msg1->Time.Milliseconds, msg2->Time.Milliseconds);
+#endif
+#if NMEA_MESSAGE_ZDA_DAY
+    assert(Num, msg1->Day, msg2->Day);
+#endif
+#if NMEA_MESSAGE_ZDA_MONTH
+    assert(Num, msg1->Month, msg2->Month);
+#endif
+#if NMEA_MESSAGE_ZDA_YEAR
+    assert(Num, msg1->Year, msg2->Year);
+#endif
+#if NMEA_MESSAGE_ZDA_LOCALZONEHOURS
+    assert(Num, msg1->LocalZoneHours, msg2->LocalZoneHours);
+#endif
+#if NMEA_MESSAGE_ZDA_LOCALZONEMINUTES
+    assert(Num, msg1->LocalZoneMinutes, msg2->LocalZoneMinutes);
+#endif
+    return 0;
+}
 
 uint32_t Assert_Num(int num1, int num2, uint32_t line) {
 	if (num1 != num2) {
-		PRINTF("%d\r\n", (num1));
+		PRINTF("Expected: %d, Found: %d\r\n", num2, num1);
 		return Str_Error | line << 1;
 	}
 	return (uint32_t) Str_Ok;
 }
 uint32_t Assert_Float(float num1, float num2, uint32_t line) {
 	if (num1 != num2) {
-		PRINTF("%f\r\n", (num1));
+		PRINTF("Expected: %f, Found: %f\r\n", num2, num1);
 		return Str_Error | line << 1;
 	}
 	return (uint32_t) Str_Ok;

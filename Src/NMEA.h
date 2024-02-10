@@ -38,6 +38,10 @@ extern "C" {
  * Disable it if you want use basic parse
  */
 #define NMEA_SUPPORT_MODULAR                    1
+/**
+ * @brief Enable deinit message before parse
+ */
+#define NMEA_SUPPORT_DEINIT_MESSAGE             1
 
 /* --------------------------- Messages Support ----------------------------- */
 #define NMEA_MESSAGE_GGA                        1
@@ -124,7 +128,7 @@ extern "C" {
     #define NMEA_MESSAGE_ZDA_YEAR               1
     #define NMEA_MESSAGE_ZDA_MONTH              1
     #define NMEA_MESSAGE_ZDA_DAY                1
-    #define NMEA_MESSAGE_ZDA_LOCALZONEHOUR      1
+    #define NMEA_MESSAGE_ZDA_LOCALZONEHOURS      1
     #define NMEA_MESSAGE_ZDA_LOCALZONEMINUTES   1
 #endif
 
@@ -145,8 +149,8 @@ extern "C" {
 #endif
 
 /* Defines */
-#define NMEA_MESSAGE_GGA_FIELDS_LENGTH          (NMEA_MESSAGE_GGA_LATITUDE + \
-                                                 NMEA_MESSAGE_GGA_LONGITUDE + \
+#define NMEA_MESSAGE_GGA_FIELDS_LENGTH          ((NMEA_MESSAGE_GGA_LATITUDE * 2) + \
+                                                 (NMEA_MESSAGE_GGA_LONGITUDE * 2) + \
                                                  NMEA_MESSAGE_GGA_HDOP + \
                                                  NMEA_MESSAGE_GGA_ALTITUDE + \
                                                  NMEA_MESSAGE_GGA_GEOID + \
@@ -158,8 +162,8 @@ extern "C" {
                                                  NMEA_MESSAGE_GGA_GEOIDUNITS + \
                                                  NMEA_MESSAGE_GGA_AGEOFDIFF)
 
-#define NMEA_MESSAGE_GLL_FIELDS_LENGTH          (NMEA_MESSAGE_GLL_LATITUDE + \
-                                                 NMEA_MESSAGE_GLL_LONGITUDE + \
+#define NMEA_MESSAGE_GLL_FIELDS_LENGTH          ((NMEA_MESSAGE_GLL_LATITUDE * 2) + \
+                                                 (NMEA_MESSAGE_GLL_LONGITUDE * 2) + \
                                                  NMEA_MESSAGE_GLL_TIME + \
                                                  NMEA_MESSAGE_GLL_STATUS + \
                                                  NMEA_MESSAGE_GLL_MODE)
@@ -169,12 +173,12 @@ extern "C" {
                                                  NMEA_MESSAGE_GSA_VDOP + \
                                                  NMEA_MESSAGE_GSA_MODE + \
                                                  NMEA_MESSAGE_GSA_FIX_STATUS + \
-                                                 (NMEA_MESSAGE_GSA_SATELLITESUSED * 12))
+                                                 (NMEA_MESSAGE_GSA_SATELLITESUSED * NMEA_GSA_MAX_SATELLITES))
 
 #define NMEA_MESSAGE_GSV_FIELDS_LENGTH          (NMEA_MESSAGE_GSV_SATELLITES + \
                                                  NMEA_MESSAGE_GSV_TOTALMESSAGES + \
                                                  NMEA_MESSAGE_GSV_MESSAGENUMBER + \
-                                                 (NMEA_MESSAGE_GSV_SATELLITESINVIEW * 4 * 4))
+                                                 (NMEA_MESSAGE_GSV_SATELLITESINVIEW * NMEA_GSV_MAX_SATELLITES * 4))
 
 #define NMEA_MESSAGE_MSS_FIELDS_LENGTH          (NMEA_MESSAGE_MSS_BEACONFREQUENCY + \
                                                  NMEA_MESSAGE_MSS_BEACONBITRATE + \
@@ -182,9 +186,9 @@ extern "C" {
                                                  NMEA_MESSAGE_MSS_SNR + \
                                                  NMEA_MESSAGE_MSS_CHANNELNUMBER)
 
-#define NMEA_MESSAGE_RMC_FIELDS_LENGTH          (NMEA_MESSAGE_RMC_LATITUDE + \
-                                                 NMEA_MESSAGE_RMC_LONGITUDE + \
-                                                 NMEA_MESSAGE_RMC_MAGNETICVARIATION + \
+#define NMEA_MESSAGE_RMC_FIELDS_LENGTH          ((NMEA_MESSAGE_RMC_LATITUDE * 2) + \
+                                                 (NMEA_MESSAGE_RMC_LONGITUDE * 2) + \
+                                                 (NMEA_MESSAGE_RMC_MAGNETICVARIATION * 2) + \
                                                  NMEA_MESSAGE_RMC_SPEEDOVERGROUND + \
                                                  NMEA_MESSAGE_RMC_COURSEOVERGROUND + \
                                                  NMEA_MESSAGE_RMC_TIME + \
@@ -206,9 +210,11 @@ extern "C" {
                                                  NMEA_MESSAGE_ZDA_YEAR + \
                                                  NMEA_MESSAGE_ZDA_MONTH + \
                                                  NMEA_MESSAGE_ZDA_DAY + \
-                                                 NMEA_MESSAGE_ZDA_LOCALZONEHOUR + \
+                                                 NMEA_MESSAGE_ZDA_LOCALZONEHOURS + \
                                                  NMEA_MESSAGE_ZDA_LOCALZONEMINUTES)                                                                                                  
 
+#define NMEA_GSA_MAX_SATELLITES                 12
+#define NMEA_GSV_MAX_SATELLITES                 4
 /**
  * @brief NMEA Message Types that support
  */
@@ -343,9 +349,9 @@ typedef enum {
  * @brief Description of Mode2 in GSA Message
  */
 typedef enum {
-    NMEA_FixStatus_NotFix           = 0,
-    NMEA_FixStatus_2D               = 1,
-    NMEA_FixStatus_3D               = 2,
+    NMEA_FixStatus_NotFix           = 1,
+    NMEA_FixStatus_2D               = 2,
+    NMEA_FixStatus_3D               = 3,
 } NMEA_FixStatus;
 /**
  * @brief Description of Satellite in view
@@ -446,7 +452,7 @@ typedef struct {
     uint8_t                     FixStatus;
 #endif
 #if NMEA_MESSAGE_GSA_SATELLITESUSED
-    uint8_t                     SatellitesUsed[12];
+    uint8_t                     SatellitesUsed[NMEA_GSA_MAX_SATELLITES];
 #endif
 } NMEA_Message_GSA;
 #endif
@@ -457,7 +463,7 @@ typedef struct {
  */
 typedef struct {
 #if NMEA_MESSAGE_GSV_SATELLITES
-    NMEA_SatelliteInView        Satellites[4];
+    NMEA_SatelliteInView        Satellites[NMEA_GSV_MAX_SATELLITES];
 #endif
 #if NMEA_MESSAGE_GSV_TOTALMESSAGES
     uint8_t                     TotalMessages;
@@ -581,8 +587,8 @@ typedef struct {
 #if NMEA_MESSAGE_ZDA_DAY
     uint8_t                     Day;
 #endif
-#if NMEA_MESSAGE_ZDA_LOCALZONEHOUR
-    uint8_t                     LocalZoneHour;
+#if NMEA_MESSAGE_ZDA_LOCALZONEHOURS
+    uint8_t                     LocalZoneHours;
 #endif
 #if NMEA_MESSAGE_ZDA_LOCALZONEMINUTES
     uint8_t                     LocalZoneMinutes;
