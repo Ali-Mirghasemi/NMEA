@@ -19,9 +19,6 @@ typedef struct {
 #define NMEA_MESSAGE_ID_LEN         3
 #define NMEA_MESSAGE_IDS_LEN        NMEA_MessageType_Reserved
 /* Private Functions */
-// Compare functions
-static Mem_CmpResult NMEA_compareTalkerId(const char* itemA, const char* ItemB);
-static Mem_CmpResult NMEA_compareMessageType(const char* itemA, const char* ItemB);
 // Basic Field Parser
 static NMEA_Result NMEA_Field_Char_parse(char* line, char* val);
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val);
@@ -45,7 +42,7 @@ static NMEA_Result NMEA_Field_MagneticVariationIndicator_parse(char* line, NMEA_
 static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NMEA_Message* msg);
 /* Private Macros */
 #define ARR_LEN(ARR)                            (sizeof(ARR)/sizeof(ARR[0]))
-#define __offset(MSG, FIELD)                    (uint32_t) &((const MSG*) 0)->FIELD
+#define __offset(MSG, FIELD)                    ((uint8_t) (uint32_t) ((uint8_t*) &((const MSG*) 0)->FIELD - (uint8_t*) 0))
 #define __field(MSG, IDX, TYPE, FIELD)          { .parse = (NMEA_ParseFieldFn) NMEA_Field_ ##TYPE ##_parse , .Index = IDX, .Offset = __offset(MSG, FIELD) }
 #define __fieldList(MSG)                        { .Fields = MSG ##_PARSE_FIELD, .Len = NMEA_MESSAGE_ ##MSG ##_FIELDS_LENGTH }
 
@@ -213,7 +210,7 @@ static const NMEA_Field RMC_PARSE_FIELD[NMEA_MESSAGE_RMC_FIELDS_LENGTH] = {
     __field(NMEA_Message_RMC, 0, Time, Time),
 #endif
 #if NMEA_MESSAGE_RMC_STATUS
-    __field(NMEA_Message_RMC, 1, Char, Status),
+    __field(NMEA_Message_RMC, 1, MessageStatus, Status),
 #endif
 #if NMEA_MESSAGE_RMC_LATITUDE
     __field(NMEA_Message_RMC, 2, Latitude, Latitude),
@@ -389,10 +386,10 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
     Mem_set(msg, 0, sizeof(NMEA_Message));
 #endif
     // Find Talker ID
-    msg->Header.Id = (uint8_t) Mem_binarySearch(NMEA_TALKER_IDS, NMEA_TALKER_IDS_LEN, NMEA_TALKER_ID_LEN, line, NMEA_compareTalkerId);
+    msg->Header.Id = (uint8_t) Mem_binarySearch(NMEA_TALKER_IDS, NMEA_TALKER_IDS_LEN, NMEA_TALKER_ID_LEN, line, (Mem_CompareFn) Mem_compare);
     line += NMEA_TALKER_ID_LEN;
     // Find Message Type
-    msg->Header.Type = (uint8_t) Mem_binarySearch(NMEA_MESSAGE_IDS, NMEA_MESSAGE_IDS_LEN, NMEA_MESSAGE_ID_LEN, line, NMEA_compareMessageType);
+    msg->Header.Type = (uint8_t) Mem_binarySearch(NMEA_MESSAGE_IDS, NMEA_MESSAGE_IDS_LEN, NMEA_MESSAGE_ID_LEN, line, (Mem_CompareFn) Mem_compare);
     line += NMEA_MESSAGE_ID_LEN;
     // Find Checksum
     end = Str_indexOf(line, '*');
@@ -401,7 +398,7 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
     }
     *end = '\0';
 #if NMEA_MESSAGE_CHECKSUM
-    if (Str_convertNumFix(end + 1,  &num, Str_Hex, 2) != Str_Ok) {
+    if (Str_convertUNumHexFix(end + 1,  &num, 2) != Str_Ok) {
         return NMEA_Result_ChecksumField;
     }
     msg->Checksum = (uint8_t) num;
@@ -514,12 +511,6 @@ void* NMEA_getArgs(NMEA* nmea) {
 #endif // NMEA_SUPPORT_MODULAR
 
 // ---------------------------------- Private APIs ------------------------------
-static Mem_CmpResult NMEA_compareTalkerId(const char* itemA, const char* itemB) {
-    return Mem_compare(itemA, itemB, NMEA_TALKER_ID_LEN);
-}
-static Mem_CmpResult NMEA_compareMessageType(const char* itemA, const char* itemB) {
-    return Mem_compare(itemA, itemB, NMEA_MESSAGE_ID_LEN);
-}
 // Basic Field Parser
 static NMEA_Result NMEA_Field_Char_parse(char* line, char* val) {
     *val = *line;
@@ -528,7 +519,7 @@ static NMEA_Result NMEA_Field_Char_parse(char* line, char* val) {
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num))) {
+    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint8_t) num;
@@ -538,7 +529,7 @@ static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
 static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num))) {
+    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint16_t) num;
@@ -548,7 +539,7 @@ static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
 static NMEA_Result NMEA_Field_UInt32_parse(char* line, uint32_t* val) {
     Str_UNum num = 0;
     Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num))) {
+    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint32_t) num;
@@ -557,7 +548,7 @@ static NMEA_Result NMEA_Field_UInt32_parse(char* line, uint32_t* val) {
 }
 static NMEA_Result NMEA_Field_Float_parse(char* line, float* val) {
     Str_Result result;
-    if ((result = Str_convertFloat(line, val))) {
+    if ((result = Str_convertFloat(line, val)) != Str_Ok) {
         result |= NMEA_Result_Custom;
     }
 
@@ -567,25 +558,25 @@ static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
     Str_UNum num = 0;
     Str_Result result;
     // Hour
-    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Hours = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Minutes = (uint8_t) num;
     // Seconds
-    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Seconds = (uint8_t) num;
     // Check there is millis
     if (line[6] == '.') {
         // Milliseconds
-        if ((result = Str_convertUNumDecimal(&line[7], &num))) {
-            return (NMEA_Result) result | NMEA_Result_Custom;
+        if ((result = Str_convertUNumDecimal(&line[7], &num)) != Str_Ok) {
+            return (NMEA_Result) (result | NMEA_Result_Custom);
         }
         time->Milliseconds = (uint16_t) num;
     }
@@ -599,18 +590,18 @@ static NMEA_Result NMEA_Field_Date_parse(char* line, NMEA_Date* date) {
     Str_UNum num = 0;
     Str_Result result;
     // Day
-    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Day = (uint8_t) num;
     // Month
-    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Month = (uint8_t) num;
     // Year
-    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2))) {
-        return (NMEA_Result) result | NMEA_Result_Custom;
+    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2)) != Str_Ok) {
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Year = (uint16_t) num;
 
@@ -687,33 +678,32 @@ static NMEA_Result NMEA_Field_FixStatus_parse(char* line, uint8_t* mode) {
 }
 static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor) {
     Str_UNum num;
-    NMEA_Result result;
-    char* end;
+    Str_Result result;
 
     // Degrees
     if ((result = Str_convertUNumDecimalFix(line, &num, 2)) != Str_Ok) {
-        return result | NMEA_Result_Custom;
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     cor->Degrees = (uint8_t) num;
     // Minutes
     if ((result = Str_convertFloat(&line[2], &cor->Minutes)) != Str_Ok) {
-        return result | NMEA_Result_Custom;
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
 
     return NMEA_Result_Ok;
 }
 static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) {
     Str_UNum num;
-    NMEA_Result result;
+    Str_Result result;
 
     // Degrees
     if ((result = Str_convertUNumDecimalFix(line, &num, 3)) != Str_Ok) {
-        return result | NMEA_Result_Custom;
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     cor->Degrees = (uint8_t) num;
     // Minutes
     if ((result = Str_convertFloat(&line[3], &cor->Minutes)) != Str_Ok) {
-        return result | NMEA_Result_Custom;
+        return (NMEA_Result) (result | NMEA_Result_Custom);
     }
 
     return NMEA_Result_Ok;
@@ -756,12 +746,12 @@ static NMEA_Result NMEA_Field_MagneticVariationIndicator_parse(char* line, NMEA_
 }
 static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NMEA_Message* msg) {
     NMEA_Result result;
-    NMEA_Field* field = f->Fields;
+    const NMEA_Field* field = f->Fields;
     uint8_t len = f->Len;
     uint8_t idx = 0;
     char* end;
     // Parse fields
-    while ((end = Str_indexOf(line, ',')) && len > 0) {
+    while ((end = Str_indexOf(line, ',')) != NULL && len > 0) {
         *end = '\0';
         if (line != '\0' && field->Index == idx) {
             if ((result = field->parse(line, (void*) ((uint8_t*) msg + field->Offset))) != NMEA_Result_Ok) {
