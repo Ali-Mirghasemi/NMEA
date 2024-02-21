@@ -726,6 +726,7 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg);
 void NMEA_init(NMEA* nmea);
 void NMEA_parse(NMEA* nmea, char* line);
 void NMEA_onMessage(NMEA* nmea, NMEA_MessageType type, NMEA_OnMessageFn fn);
+void NMEA_onError(NMEA* nmea, NMEA_OnErrorFn fn);
 
 #if NMEA_SUPPORT_ISTREAM
     void NMEA_handle(NMEA* nmea, IStream* input);

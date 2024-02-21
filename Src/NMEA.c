@@ -455,6 +455,15 @@ void NMEA_onMessage(NMEA* nmea, NMEA_MessageType type, NMEA_OnMessageFn fn) {
     nmea->Callbacks.fn[0] = fn;
 #endif
 }
+/**
+ * @brief Set callback for error
+ * 
+ * @param nmea 
+ * @param fn 
+ */
+void NMEA_onError(NMEA* nmea, NMEA_OnErrorFn fn) {
+    nmea->onError = fn;
+}
 
 #if NMEA_SUPPORT_ISTREAM
 /**
