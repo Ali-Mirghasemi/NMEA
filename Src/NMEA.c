@@ -413,6 +413,36 @@ NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg) {
         return NMEA_Result_MessageTypeNotSupported;
     }
 }
+/**
+ * @brief Convert Latitude to float
+ * 
+ * @param coord 
+ * @return float 
+ */
+float NMEA_convertLatitude(NMEA_Coordinate* coord) {
+    return ((float) coord->Degrees + (coord->Minutes / 60.0f)) * (coord->Indicator == NMEA_Indicator_South? -1 : 1);
+}
+/**
+ * @brief Convert Longitude to float
+ * 
+ * @param coord 
+ * @return float 
+ */
+float NMEA_convertLongitude(NMEA_Coordinate* coord) {
+    return ((float) coord->Degrees + (coord->Minutes / 60.0f)) * (coord->Indicator == NMEA_Indicator_West ? -1 : 1);
+}
+/**
+ * @brief Convert NMEA Coordinate to Full Coordinate
+ * 
+ * @param lat 
+ * @param lon 
+ * @param coord 
+ */
+void NMEA_convert(NMEA_Coordinate* lat, NMEA_Coordinate* lon, float altitude, NMEA_CoordinateFull* coord) {
+    coord->Latitude = NMEA_convertLatitude(lat);
+    coord->Longitude = NMEA_convertLongitude(lon);
+    coord->Altitude = altitude;
+}
 #if NMEA_SUPPORT_MODULAR
 /**
  * @brief Initialize NMEA structure with default values
@@ -518,6 +548,59 @@ void* NMEA_getArgs(NMEA* nmea) {
 #endif // NMEA_SUPPORT_ARGS
 
 #endif // NMEA_SUPPORT_MODULAR
+
+#if NMEA_SUPPORT_BEARING
+#include <math.h>
+/**
+ * @brief Calculate bearing between two coordinates
+ *
+ * @param a
+ * @param b
+ * @param result
+ * @return float return the distance in meters
+ */
+float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateFull* b, NMEA_Bearing* result) {
+    #define M_PI   3.14159265358979323846f
+    // Calculate the difference in latitude and longitude
+    float deltaLat = b->Latitude - a->Latitude;
+    float deltaLon = b->Longitude - a->Longitude;
+
+    // Calculate the bearing using the Haversine formula
+    float y = sinf(deltaLon) * cosf(b->Latitude);
+    float x = cosf(a->Latitude) * sinf(b->Latitude) - sinf(a->Latitude) * cosf(b->Latitude) * cosf(deltaLon);
+    float bearing = atan2(y, x);
+
+    // Convert the bearing to degrees
+    bearing = bearing * 180 / M_PI;
+
+    // Calculate the distance using the Haversine formula
+    float earthRadius = 6371000; // Radius of the Earth in meters
+    float aLatRad = a->Latitude * M_PI / 180;
+    float bLatRad = b->Latitude * M_PI / 180;
+    float deltaLatRad = deltaLat * M_PI / 180;
+    float deltaLonRad = deltaLon * M_PI / 180;
+    float haversineA = sinf(deltaLatRad / 2) * sinf(deltaLatRad / 2) + cosf(aLatRad) * cosf(bLatRad) * sinf(deltaLonRad / 2) * sinf(deltaLonRad / 2);
+    float haversineC = 2 * atan2(sqrt(haversineA), sqrt(1 - haversineA));
+    float distance = earthRadius * haversineC;
+
+    // Calculate the elevation using the altitude difference
+    float altitudeDiff = a->Altitude - b->Altitude;
+    float realDistance = sqrt(pow(deltaLat, 2) + pow(deltaLon, 2) + pow(altitudeDiff, 2));
+    float elevationRad = atan2(altitudeDiff, realDistance);
+    float elevationDeg = elevationRad * (180 / M_PI);
+
+    // Set the result values
+    if (result) {
+        result->Azimuth = bearing;
+        result->Elevation = elevationDeg;
+        result->Distance = distance;
+        result->RealDistance = realDistance;
+    }
+
+    // Return the distance in meters
+    return distance;
+}
+#endif
 
 // ---------------------------------- Private APIs ------------------------------
 // Basic Field Parser

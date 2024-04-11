@@ -141,6 +141,8 @@ extern "C" {
     #define NMEA_MAX_BUFF_SIZE                  128
 #endif
 
+#define NMEA_SUPPORT_BEARING                    1
+
 /******************************************************************************/
 /* Includes */
 #include "Str.h"
@@ -306,6 +308,23 @@ typedef struct {
     uint8_t                     Degrees;
     uint8_t                     Indicator;
 } NMEA_Coordinate;
+/**
+ * @brief NMEA Coordinate Float
+ */
+typedef struct {
+    float                       Latitude;
+    float                       Longitude;
+    float                       Altitude;
+} NMEA_CoordinateFull;
+/**
+ * @brief NMEA Bearing
+ */
+typedef struct {
+    float                       Azimuth;
+    float                       Elevation;
+    float                       Distance;
+    float                       RealDistance;
+} NMEA_Bearing;
 /**
  * @brief NMEA Magnetic Variation
  */
@@ -721,6 +740,11 @@ struct __NMEA {
 /* APIs */
 NMEA_Result NMEA_parseRaw(char* line, NMEA_Message* msg);
 
+float NMEA_convertLatitude(NMEA_Coordinate* coord);
+float NMEA_convertLongitude(NMEA_Coordinate* coord);
+
+void NMEA_convert(NMEA_Coordinate* lat, NMEA_Coordinate* lon, float altitude, NMEA_CoordinateFull* coord);
+
 #if NMEA_SUPPORT_MODULAR
 
 void NMEA_init(NMEA* nmea);
@@ -737,10 +761,14 @@ void NMEA_onError(NMEA* nmea, NMEA_OnErrorFn fn);
     void* NMEA_getArgs(NMEA* nmea);
 #endif
 
+#endif // NMEA_SUPPORT_MODULAR
+
+#if NMEA_SUPPORT_BEARING
+    float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateFull* b, NMEA_Bearing* result);
+#endif
+
 #ifdef __cplusplus
 };
 #endif
-
-#endif // NMEA_SUPPORT_MODULAR
 
 #endif // _NMEA_H_
