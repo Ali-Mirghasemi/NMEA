@@ -33,6 +33,7 @@ uint32_t Test_GSV(void);
 uint32_t Test_RMC(void);
 uint32_t Test_VTG(void);
 uint32_t Test_ZDA(void);
+uint32_t Test_Bearing(void);
 
 static const TestFunc TESTS[] = {
 #if NMEA_MESSAGE_GGA
@@ -54,7 +55,10 @@ static const TestFunc TESTS[] = {
     Test_VTG,
 #endif
 #if NMEA_MESSAGE_ZDA
-    Test_ZDA
+    Test_ZDA,
+#endif
+#if NMEA_SUPPORT_BEARING
+    Test_Bearing,
 #endif
 };
 static const uint16_t TESTS_LEN = ARRAY_LEN(TESTS);
@@ -517,6 +521,68 @@ uint32_t Test_ZDA(void) {
     Mem_set(&msg, 0, sizeof(msg));
     assert(Result, NMEA_parseRaw(temp, &msg));
     assert(Message, &msg, &MSG1);
+
+    return 0;
+}
+#endif
+#if NMEA_SUPPORT_BEARING
+uint32_t Test_Bearing(void) {
+    NMEA_CoordinateFull coord1 = {
+        .Latitude = 35.84805555f,
+        .Longitude = 51.37888888,
+        .Altitude = 1236.4f,
+    };
+    NMEA_CoordinateFull coord2 = {
+        .Latitude = 35.84805555f,
+        .Longitude = 51.37888888,
+        .Altitude = 1236.4f,
+    };
+    NMEA_Bearing bearing;
+    float distance;
+
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Float, distance, 0.0f);
+    assert(Float, bearing.Azimuth, 0.0f);
+
+    coord2.Latitude = 0.0f;
+    coord2.Longitude = 0.0f;
+    coord2.Altitude = 0.0f;
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Num, (uint32_t) distance, 6627959);
+    assert(Num, (uint32_t) bearing.Azimuth, 244);
+    assert(Num, (uint32_t) bearing.Elevation, -44);
+
+    coord2.Latitude = -20.1234f;
+    coord2.Longitude = -30.1234f;
+    coord2.Altitude = 0.0f;
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Num, (uint32_t) distance, 10575431);
+    assert(Num, (uint32_t) bearing.Azimuth, 248);
+    assert(Num, (uint32_t) bearing.Elevation, -44);
+
+    coord2.Latitude = 50.0f;
+    coord2.Longitude = -50.0f;
+    coord2.Altitude = 0.0f;
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Num, (int32_t) distance, 7757809);
+    assert(Num, (int32_t) bearing.Azimuth, 317);
+    assert(Num, (int32_t) bearing.Elevation, -44);
+
+    coord2.Latitude = 80.0f;
+    coord2.Longitude = 40.0f;
+    coord2.Altitude = 2000.0f;
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Num, (int32_t) distance, 4934726);
+    assert(Num, (int32_t) bearing.Azimuth, 357);
+    assert(Num, (int32_t) bearing.Elevation, 44);
+
+    coord2.Latitude = coord1.Latitude + 0.001f;
+    coord2.Longitude = coord1.Longitude + 0.001f;
+    coord2.Altitude = coord1.Altitude + 1000.0f;
+    distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
+    assert(Num, (int32_t) distance, 143);
+    assert(Num, (int32_t) bearing.Azimuth, 38);
+    assert(Num, (int32_t) bearing.Elevation, 45);
 
     return 0;
 }

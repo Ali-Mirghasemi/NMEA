@@ -562,29 +562,39 @@ void* NMEA_getArgs(NMEA* nmea) {
 float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateFull* b, NMEA_Bearing* result) {
     #define M_PI   3.14159265358979323846f
     // Calculate the difference in latitude and longitude
+    const float earthRadius = 6371000; // Radius of the Earth in meters
+    float latA = a->Latitude * M_PI / 180;
+    float latB = b->Latitude * M_PI / 180;
+    float lonA = a->Longitude * M_PI / 180;
+    float lonB = b->Longitude * M_PI / 180;
     float deltaLat = b->Latitude - a->Latitude;
     float deltaLon = b->Longitude - a->Longitude;
-
-    // Calculate the bearing using the Haversine formula
-    float y = sinf(deltaLon) * cosf(b->Latitude);
-    float x = cosf(a->Latitude) * sinf(b->Latitude) - sinf(a->Latitude) * cosf(b->Latitude) * cosf(deltaLon);
-    float bearing = atan2(y, x);
-
-    // Convert the bearing to degrees
-    bearing = bearing * 180 / M_PI;
-
-    // Calculate the distance using the Haversine formula
-    float earthRadius = 6371000; // Radius of the Earth in meters
     float aLatRad = a->Latitude * M_PI / 180;
     float bLatRad = b->Latitude * M_PI / 180;
     float deltaLatRad = deltaLat * M_PI / 180;
     float deltaLonRad = deltaLon * M_PI / 180;
+
+    // Calculate the bearing using the Haversine formula
+    float y = sinf(deltaLonRad) * cosf(bLatRad);
+    float x = cosf(aLatRad) * sinf(bLatRad) - sinf(aLatRad) * cosf(bLatRad) * cosf(deltaLonRad);
+    float bearing = atan2(y, x);
+
+    // Convert the bearing to degrees
+    bearing = bearing * 180 / M_PI;
+    if (bearing < 0.0) {
+        bearing = bearing + 360.0f;
+    }
+    if (bearing > 360.0) {
+        bearing = bearing - 360.0f;
+    }
+
+    // Calculate the distance using the Haversine formula
     float haversineA = sinf(deltaLatRad / 2) * sinf(deltaLatRad / 2) + cosf(aLatRad) * cosf(bLatRad) * sinf(deltaLonRad / 2) * sinf(deltaLonRad / 2);
     float haversineC = 2 * atan2(sqrt(haversineA), sqrt(1 - haversineA));
     float distance = earthRadius * haversineC;
 
     // Calculate the elevation using the altitude difference
-    float altitudeDiff = a->Altitude - b->Altitude;
+    float altitudeDiff = b->Altitude - a->Altitude;
     float realDistance = sqrt(pow(deltaLat, 2) + pow(deltaLon, 2) + pow(altitudeDiff, 2));
     float elevationRad = atan2(altitudeDiff, realDistance);
     float elevationDeg = elevationRad * (180 / M_PI);
