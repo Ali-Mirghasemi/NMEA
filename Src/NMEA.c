@@ -581,10 +581,10 @@ float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateF
 
     // Convert the bearing to degrees
     bearing = bearing * 180 / M_PI;
-    if (bearing < 0.0) {
+    if (bearing < 0.0f) {
         bearing = bearing + 360.0f;
     }
-    if (bearing > 360.0) {
+    if (bearing > 360.0f) {
         bearing = bearing - 360.0f;
     }
 
