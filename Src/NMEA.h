@@ -323,7 +323,6 @@ typedef struct {
     float                       Azimuth;
     float                       Elevation;
     float                       Distance;
-    float                       RealDistance;
 } NMEA_Bearing;
 /**
  * @brief NMEA Magnetic Variation

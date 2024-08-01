@@ -595,8 +595,7 @@ float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateF
 
     // Calculate the elevation using the altitude difference
     float altitudeDiff = b->Altitude - a->Altitude;
-    float realDistance = sqrt(pow(deltaLat, 2) + pow(deltaLon, 2) + pow(altitudeDiff, 2));
-    float elevationRad = atan2(altitudeDiff, realDistance);
+    float elevationRad = atan2(altitudeDiff, distance);
     float elevationDeg = elevationRad * (180 / M_PI);
 
     // Set the result values
@@ -604,7 +603,6 @@ float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateF
         result->Azimuth = bearing;
         result->Elevation = elevationDeg;
         result->Distance = distance;
-        result->RealDistance = realDistance;
     }
 
     // Return the distance in meters
