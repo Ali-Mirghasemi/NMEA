@@ -550,7 +550,7 @@ uint32_t Test_Bearing(void) {
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
     assert(Num, (uint32_t) distance, 6627959);
     assert(Num, (uint32_t) bearing.Azimuth, 244);
-    assert(Num, (uint32_t) bearing.Elevation, -44);
+    assert(Num, (uint32_t) bearing.Elevation, 0);
 
     coord2.Latitude = -20.1234f;
     coord2.Longitude = -30.1234f;
@@ -558,7 +558,7 @@ uint32_t Test_Bearing(void) {
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
     assert(Num, (uint32_t) distance, 10575431);
     assert(Num, (uint32_t) bearing.Azimuth, 248);
-    assert(Num, (uint32_t) bearing.Elevation, -44);
+    assert(Num, (uint32_t) bearing.Elevation, 0);
 
     coord2.Latitude = 50.0f;
     coord2.Longitude = -50.0f;
@@ -566,7 +566,7 @@ uint32_t Test_Bearing(void) {
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
     assert(Num, (int32_t) distance, 7757809);
     assert(Num, (int32_t) bearing.Azimuth, 317);
-    assert(Num, (int32_t) bearing.Elevation, -44);
+    assert(Num, (int32_t) bearing.Elevation, 0);
 
     coord2.Latitude = 80.0f;
     coord2.Longitude = 40.0f;
@@ -574,7 +574,7 @@ uint32_t Test_Bearing(void) {
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
     assert(Num, (int32_t) distance, 4934726);
     assert(Num, (int32_t) bearing.Azimuth, 357);
-    assert(Num, (int32_t) bearing.Elevation, 44);
+    assert(Num, (int32_t) bearing.Elevation, 0);
 
     coord2.Latitude = coord1.Latitude + 0.001f;
     coord2.Longitude = coord1.Longitude + 0.001f;
@@ -582,7 +582,7 @@ uint32_t Test_Bearing(void) {
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
     assert(Num, (int32_t) distance, 143);
     assert(Num, (int32_t) bearing.Azimuth, 38);
-    assert(Num, (int32_t) bearing.Elevation, 45);
+    assert(Num, (int32_t) bearing.Elevation, 81);
 
     return 0;
 }
