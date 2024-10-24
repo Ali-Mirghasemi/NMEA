@@ -6,7 +6,6 @@ typedef NMEA_Result (*NMEA_ParseFieldFn)(char* line, void* val);
 
 typedef struct {
     NMEA_ParseFieldFn   parse;
-    uint8_t             Index;
     uint8_t             Offset;
 } NMEA_Field;
 
@@ -43,7 +42,7 @@ static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NME
 /* Private Macros */
 #define ARR_LEN(ARR)                            (sizeof(ARR)/sizeof(ARR[0]))
 #define __offset(MSG, FIELD)                    ((uint8_t) (uint32_t) ((uint8_t*) &((const MSG*) 0)->FIELD - (uint8_t*) 0))
-#define __field(MSG, IDX, TYPE, FIELD)          { .parse = (NMEA_ParseFieldFn) NMEA_Field_ ##TYPE ##_parse , .Index = IDX, .Offset = __offset(MSG, FIELD) }
+#define __field(MSG, IDX, TYPE, FIELD)          { .parse = (NMEA_ParseFieldFn) NMEA_Field_ ##TYPE ##_parse , .Offset = __offset(MSG, FIELD) }
 #define __fieldList(MSG)                        { .Fields = MSG ##_PARSE_FIELD, .Len = NMEA_MESSAGE_ ##MSG ##_FIELDS_LENGTH }
 
 #if NMEA_SUPPORT_MULTI_CALLBACK
@@ -853,7 +852,7 @@ static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NME
     // Parse fields
     while ((end = Str_indexOf(line, ',')) != NULL && len > 0) {
         *end = '\0';
-        if (*line != '\0' && field->Index == idx) {
+        if (*line != '\0') {
             if ((result = field->parse(line, (void*) ((uint8_t*) msg + field->Offset))) != NMEA_Result_Ok) {
                 return result;
             }
@@ -864,7 +863,7 @@ static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NME
         field++;
     }
     // Parse last
-    if (*line != '\0' && field->Index == idx) {
+    if (*line != '\0') {
         if ((result = field->parse(line, (void*) ((uint8_t*) msg + field->Offset))) != NMEA_Result_Ok) {
             return result;
         }
