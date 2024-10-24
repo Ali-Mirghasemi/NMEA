@@ -853,18 +853,18 @@ static NMEA_Result NMEA_FieldList_parse(const NMEA_FieldList* f, char* line, NME
     // Parse fields
     while ((end = Str_indexOf(line, ',')) != NULL && len > 0) {
         *end = '\0';
-        if (line != '\0' && field->Index == idx) {
+        if (*line != '\0' && field->Index == idx) {
             if ((result = field->parse(line, (void*) ((uint8_t*) msg + field->Offset))) != NMEA_Result_Ok) {
                 return result;
             }
-            field++;
             len--;
         }
         line = end + 1;
         idx++;
+        field++;
     }
     // Parse last
-    if (line != '\0' && field->Index == idx) {
+    if (*line != '\0' && field->Index == idx) {
         if ((result = field->parse(line, (void*) ((uint8_t*) msg + field->Offset))) != NMEA_Result_Ok) {
             return result;
         }
