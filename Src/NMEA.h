@@ -24,7 +24,7 @@ extern "C" {
 /**
  * @brief Enable to use IStream for parse input gps data
 */
-#define NMEA_SUPPORT_ISTREAM                    1
+#define NMEA_SUPPORT_ISTREAM                    (1 || NMEA_LIB_STREAM)
 /**
  * @brief Enable Args in NMEA structure
  */

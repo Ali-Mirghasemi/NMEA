@@ -1,5 +1,10 @@
-.vscode
-Examples/*/NMEA-Test.layout
-Examples/*/bin
-Examples/*/obj
+.vscode/
+*.o
+*.layout
 *.depend
+*.cci
+*.h~
+*.hci
+*.c~
+*.exe
+build/

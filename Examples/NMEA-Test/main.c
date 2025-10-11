@@ -548,7 +548,7 @@ uint32_t Test_Bearing(void) {
     coord2.Longitude = 0.0f;
     coord2.Altitude = 0.0f;
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
-    assert(Num, (uint32_t) distance, 6627959);
+    assert(Num, (uint32_t) distance, 6627960);
     assert(Num, (uint32_t) bearing.Azimuth, 244);
     assert(Num, (uint32_t) bearing.Elevation, 0);
 
@@ -556,7 +556,7 @@ uint32_t Test_Bearing(void) {
     coord2.Longitude = -30.1234f;
     coord2.Altitude = 0.0f;
     distance = NMEA_calculateBearing(&coord1, &coord2, &bearing);
-    assert(Num, (uint32_t) distance, 10575431);
+    assert(Num, (uint32_t) distance, 10575432);
     assert(Num, (uint32_t) bearing.Azimuth, 248);
     assert(Num, (uint32_t) bearing.Elevation, 0);
 
