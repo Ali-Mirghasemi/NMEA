@@ -559,7 +559,9 @@ void* NMEA_getArgs(NMEA* nmea) {
  * @return float return the distance in meters
  */
 float NMEA_calculateBearing(const NMEA_CoordinateFull* a, const NMEA_CoordinateFull* b, NMEA_Bearing* result) {
+#ifndef M_PI
     #define M_PI   3.14159265358979323846f
+#endif
     // Calculate the difference in latitude and longitude
     const float earthRadius = 6371000; // Radius of the Earth in meters
     float latA = a->Latitude * M_PI / 180;
