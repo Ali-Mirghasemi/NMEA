@@ -16,134 +16,23 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#define NMEA_VER_MAJOR    0
+#define NMEA_VER_MINOR    1
+#define NMEA_VER_FIX      0
 
-/******************************************************************************/
-/*                                Configuration                               */
-/******************************************************************************/
+#include "NMEAConfig.h"
+
+#define __NME_VER_STR(major, minor, fix)     #major "." #minor "." #fix
+#define _NME_VER_STR(major, minor, fix)      __NME_VER_STR(major, minor, fix)
 /**
- * @brief Enable to use IStream for parse input gps data
-*/
-#define NMEA_SUPPORT_ISTREAM                    (1 || NMEA_LIB_STREAM)
-/**
- * @brief Enable Args in NMEA structure
+ * @brief show nmea version in string format
  */
-#define NMEA_SUPPORT_ARGS                       1
+#define NME_VER_STR                          _NME_VER_STR(NME_VER_MAJOR, NME_VER_MINOR, NME_VER_FIX)
 /**
- * @brief Enable Callback per message
+ * @brief show nmea version in integer format, ex: 0.2.0 -> 200
  */
-#define NMEA_SUPPORT_MULTI_CALLBACK             1
-/**
- * @brief Enable Feature to Access callbacks and advance features
- * Disable it if you want use basic parse
- */
-#define NMEA_SUPPORT_MODULAR                    1
-/**
- * @brief Enable deinit message before parse
- */
-#define NMEA_SUPPORT_DEINIT_MESSAGE             1
+#define NME_VER                              ((NME_VER_MAJOR * 10000UL) + (NME_VER_MINOR * 100UL) + (NME_VER_FIX))
 
-/* --------------------------- Messages Support ----------------------------- */
-#define NMEA_MESSAGE_GGA                        1
-#if NMEA_MESSAGE_GGA
-    #define NMEA_MESSAGE_GGA_LATITUDE           1
-    #define NMEA_MESSAGE_GGA_LONGITUDE          1
-    #define NMEA_MESSAGE_GGA_HDOP               1
-    #define NMEA_MESSAGE_GGA_ALTITUDE           1
-    #define NMEA_MESSAGE_GGA_GEOID              1
-    #define NMEA_MESSAGE_GGA_DIFFREFSTATIONID   1
-    #define NMEA_MESSAGE_GGA_TIME               1
-    #define NMEA_MESSAGE_GGA_POSITIONFIX        1
-    #define NMEA_MESSAGE_GGA_SATELLITESUSED     1
-    #define NMEA_MESSAGE_GGA_ALTITUDE_UNIT      1
-    #define NMEA_MESSAGE_GGA_GEOIDUNITS         1
-    #define NMEA_MESSAGE_GGA_AGEOFDIFF          1
-#endif
-
-#define NMEA_MESSAGE_GLL                        1
-#if NMEA_MESSAGE_GLL
-    #define NMEA_MESSAGE_GLL_LATITUDE           1
-    #define NMEA_MESSAGE_GLL_LONGITUDE          1
-    #define NMEA_MESSAGE_GLL_TIME               1
-    #define NMEA_MESSAGE_GLL_STATUS             1
-    #define NMEA_MESSAGE_GLL_MODE               1
-#endif
-
-#define NMEA_MESSAGE_GSA                        1
-#if NMEA_MESSAGE_GSA
-    #define NMEA_MESSAGE_GSA_PDOP               1
-    #define NMEA_MESSAGE_GSA_HDOP               1
-    #define NMEA_MESSAGE_GSA_VDOP               1
-    #define NMEA_MESSAGE_GSA_MODE               1
-    #define NMEA_MESSAGE_GSA_FIX_STATUS         1
-    #define NMEA_MESSAGE_GSA_SATELLITESUSED     1
-#endif
-
-#define NMEA_MESSAGE_GSV                        1
-#if NMEA_MESSAGE_GSV
-    #define NMEA_MESSAGE_GSV_SATELLITES         1
-    #define NMEA_MESSAGE_GSV_TOTALMESSAGES   1
-    #define NMEA_MESSAGE_GSV_MESSAGENUMBER      1
-    #define NMEA_MESSAGE_GSV_SATELLITESINVIEW   1
-#endif
-
-#define NMEA_MESSAGE_MSS                        1
-#if NMEA_MESSAGE_MSS
-    #define NMEA_MESSAGE_MSS_BEACONFREQUENCY    1
-    #define NMEA_MESSAGE_MSS_BEACONBITRATE      1
-    #define NMEA_MESSAGE_MSS_SIGNALSTRENGTH     1
-    #define NMEA_MESSAGE_MSS_SNR                1
-    #define NMEA_MESSAGE_MSS_CHANNELNUMBER      1
-#endif
-
-#define NMEA_MESSAGE_RMC                        1
-#if NMEA_MESSAGE_RMC
-    #define NMEA_MESSAGE_RMC_LATITUDE           1
-    #define NMEA_MESSAGE_RMC_LONGITUDE          1
-    #define NMEA_MESSAGE_RMC_MAGNETICVARIATION  1
-    #define NMEA_MESSAGE_RMC_SPEEDOVERGROUND    1
-    #define NMEA_MESSAGE_RMC_COURSEOVERGROUND   1
-    #define NMEA_MESSAGE_RMC_TIME               1
-    #define NMEA_MESSAGE_RMC_DATE               1
-    #define NMEA_MESSAGE_RMC_STATUS             1
-    #define NMEA_MESSAGE_RMC_MODE               1
-#endif
-
-#define NMEA_MESSAGE_VTG                        1
-#if NMEA_MESSAGE_VTG
-    #define NMEA_MESSAGE_VTG_COURSE1            1
-    #define NMEA_MESSAGE_VTG_COURSE2            1
-    #define NMEA_MESSAGE_VTG_SPEED1             1
-    #define NMEA_MESSAGE_VTG_SPEED2             1
-    #define NMEA_MESSAGE_VTG_REFERENCE1         1
-    #define NMEA_MESSAGE_VTG_REFERENCE2         1
-    #define NMEA_MESSAGE_VTG_SPEEDUNITS1        1
-    #define NMEA_MESSAGE_VTG_SPEEDUNITS2        1
-    #define NMEA_MESSAGE_VTG_MODE               1
-#endif
-
-#define NMEA_MESSAGE_ZDA                        1
-#if NMEA_MESSAGE_ZDA
-    #define NMEA_MESSAGE_ZDA_TIME               1
-    #define NMEA_MESSAGE_ZDA_YEAR               1
-    #define NMEA_MESSAGE_ZDA_MONTH              1
-    #define NMEA_MESSAGE_ZDA_DAY                1
-    #define NMEA_MESSAGE_ZDA_LOCALZONEHOURS      1
-    #define NMEA_MESSAGE_ZDA_LOCALZONEMINUTES   1
-#endif
-
-#define NMEA_MESSAGE_CHECKSUM                   1
-#if NMEA_MESSAGE_CHECKSUM
-    #define NMEA_MESSAGE_VALIDATE_CHECKSUM      1
-#endif
-
-#if NMEA_SUPPORT_ISTREAM
-    #define NMEA_MAX_BUFF_SIZE                  128
-#endif
-
-#define NMEA_SUPPORT_BEARING                    1
-
-/******************************************************************************/
 /* Includes */
 #include "Str.h"
 #if NMEA_SUPPORT_ISTREAM
