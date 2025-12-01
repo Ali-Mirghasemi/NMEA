@@ -166,7 +166,12 @@ if(${LIB_NAME_UPPER}_BUILD_SHARED_LIB)
     target_compile_features(${SHARED_TARGET} PUBLIC c_std_99)
     target_compile_definitions(${SHARED_TARGET} PRIVATE ${LIB_NAME_UPPER}_EXPORTS)
     
-    target_link_libraries(${SHARED_TARGET} PUBLIC ${STR_LIB} m)
+    # --- Link Libraries (Shared) ---
+    if(MSVC)
+        target_link_libraries(${SHARED_TARGET} PUBLIC ${STR_LIB})
+    else()
+        target_link_libraries(${SHARED_TARGET} PUBLIC ${STR_LIB} m)
+    endif()
 
     if(${LIB_NAME_UPPER}_LIB_STREAM)
         target_link_libraries(${SHARED_TARGET} PUBLIC ${STREAM_LIB})
@@ -206,7 +211,11 @@ if(${LIB_NAME_UPPER}_BUILD_STATIC_LIB)
     )
     target_compile_features(${STATIC_TARGET} PUBLIC c_std_99)
     
-    target_link_libraries(${STATIC_TARGET} PUBLIC ${STR_LIB} m)
+    if(MSVC)
+        target_link_libraries(${STATIC_TARGET} PUBLIC ${STR_LIB})
+    else()
+        target_link_libraries(${STATIC_TARGET} PUBLIC ${STR_LIB} m)
+    endif()
 
     if(${LIB_NAME_UPPER}_LIB_STREAM)
         target_link_libraries(${STATIC_TARGET} PUBLIC ${STREAM_LIB})
