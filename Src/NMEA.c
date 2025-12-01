@@ -501,7 +501,7 @@ void NMEA_onError(NMEA* nmea, NMEA_OnErrorFn fn) {
  * @param nmea
  * @param input
  */
-void NMEA_handle(NMEA* nmea, IStream* input) {
+void NMEA_handle(NMEA* nmea, StreamIn* input) {
     if (IStream_available(input) > 0) {
         char line[NMEA_MAX_BUFF_SIZE];
         Stream_LenType start;

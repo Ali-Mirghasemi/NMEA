@@ -641,7 +641,7 @@ void NMEA_onMessage(NMEA* nmea, NMEA_MessageType type, NMEA_OnMessageFn fn);
 void NMEA_onError(NMEA* nmea, NMEA_OnErrorFn fn);
 
 #if NMEA_SUPPORT_ISTREAM
-    void NMEA_handle(NMEA* nmea, IStream* input);
+    void NMEA_handle(NMEA* nmea, StreamIn* input);
 #endif
 
 #if NMEA_SUPPORT_ARGS

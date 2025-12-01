@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 /**
- * @brief Enable to use IStream for parse input gps data
+ * @brief Enable to use StreamIn for parse input gps data
 */
 //#define NMEA_SUPPORT_ISTREAM                    (1 || defined(NMEA_LIB_STREAM))
 /**
