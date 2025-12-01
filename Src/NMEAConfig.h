@@ -22,6 +22,10 @@
     #include "NMEAUserConfig.h"
 #endif
 
+#ifndef NMEA_LIB_STREAM
+    #define NMEA_LIB_STREAM     0
+#endif
+
 /******************************************************************************/
 /*                                Configuration                               */
 /******************************************************************************/
@@ -29,7 +33,7 @@
  * @brief Enable to use StreamIn for parse input gps data
 */
 #ifndef NMEA_SUPPORT_ISTREAM
-    #define NMEA_SUPPORT_ISTREAM                    (1 || defined(NMEA_LIB_STREAM))
+    #define NMEA_SUPPORT_ISTREAM                    (1 || NMEA_LIB_STREAM)
 #endif
 /**
  * @brief Enable Args in NMEA structure

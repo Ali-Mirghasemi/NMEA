@@ -619,8 +619,8 @@ static NMEA_Result NMEA_Field_Char_parse(char* line, char* val) {
 }
 static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
     Str_UNum num = 0;
-    Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
+    NMEA_Result result;
+    if ((result = (NMEA_Result) Str_convertUNumDecimal(line, &num)) != NMEA_Result_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint8_t) num;
@@ -629,8 +629,8 @@ static NMEA_Result NMEA_Field_UInt8_parse(char* line, uint8_t* val) {
 }
 static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
     Str_UNum num = 0;
-    Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
+    NMEA_Result result;
+    if ((result = (NMEA_Result) Str_convertUNumDecimal(line, &num)) != NMEA_Result_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint16_t) num;
@@ -639,8 +639,8 @@ static NMEA_Result NMEA_Field_UInt16_parse(char* line, uint16_t* val) {
 }
 static NMEA_Result NMEA_Field_UInt32_parse(char* line, uint32_t* val) {
     Str_UNum num = 0;
-    Str_Result result;
-    if ((result = Str_convertUNumDecimal(line, &num)) != Str_Ok) {
+    NMEA_Result result;
+    if ((result = (NMEA_Result) Str_convertUNumDecimal(line, &num)) != NMEA_Result_Ok) {
         result |= NMEA_Result_Custom;
     }
     *val = (uint32_t) num;
@@ -648,8 +648,8 @@ static NMEA_Result NMEA_Field_UInt32_parse(char* line, uint32_t* val) {
     return (NMEA_Result) result;
 }
 static NMEA_Result NMEA_Field_Float_parse(char* line, float* val) {
-    Str_Result result;
-    if ((result = Str_convertFloat(line, val)) != Str_Ok) {
+    NMEA_Result result;
+    if ((result = (NMEA_Result) Str_convertFloat(line, val)) != NMEA_Result_Ok) {
         result |= NMEA_Result_Custom;
     }
 
@@ -657,26 +657,26 @@ static NMEA_Result NMEA_Field_Float_parse(char* line, float* val) {
 }
 static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
     Str_UNum num = 0;
-    Str_Result result;
+    NMEA_Result result;
     // Hour
-    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[0], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Hours = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[2], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Minutes = (uint8_t) num;
     // Seconds
-    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[4], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     time->Seconds = (uint8_t) num;
     // Check there is millis
     if (line[6] == '.') {
         // Milliseconds
-        if ((result = Str_convertUNumDecimal(&line[7], &num)) != Str_Ok) {
+        if ((result = (NMEA_Result) Str_convertUNumDecimal(&line[7], &num)) != NMEA_Result_Ok) {
             return (NMEA_Result) (result | NMEA_Result_Custom);
         }
         time->Milliseconds = (uint16_t) num;
@@ -689,19 +689,19 @@ static NMEA_Result NMEA_Field_Time_parse(char* line, NMEA_Time* time) {
 }
 static NMEA_Result NMEA_Field_Date_parse(char* line, NMEA_Date* date) {
     Str_UNum num = 0;
-    Str_Result result;
+    NMEA_Result result;
     // Day
-    if ((result = Str_convertUNumDecimalFix(&line[0], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[0], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Day = (uint8_t) num;
     // Month
-    if ((result = Str_convertUNumDecimalFix(&line[2], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[2], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Month = (uint8_t) num;
     // Year
-    if ((result = Str_convertUNumDecimalFix(&line[4], &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(&line[4], &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     date->Year = (uint16_t) num;
@@ -779,15 +779,15 @@ static NMEA_Result NMEA_Field_FixStatus_parse(char* line, uint8_t* mode) {
 }
 static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor) {
     Str_UNum num;
-    Str_Result result;
+    NMEA_Result result;
 
     // Degrees
-    if ((result = Str_convertUNumDecimalFix(line, &num, 2)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(line, &num, 2)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     cor->Degrees = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertFloat(&line[2], &cor->Minutes)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertFloat(&line[2], &cor->Minutes)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
 
@@ -795,15 +795,15 @@ static NMEA_Result NMEA_Field_Latitude_parse(char* line, NMEA_Coordinate* cor) {
 }
 static NMEA_Result NMEA_Field_Longitude_parse(char* line, NMEA_Coordinate* cor) {
     Str_UNum num;
-    Str_Result result;
+    NMEA_Result result;
 
     // Degrees
-    if ((result = Str_convertUNumDecimalFix(line, &num, 3)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertUNumDecimalFix(line, &num, 3)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
     cor->Degrees = (uint8_t) num;
     // Minutes
-    if ((result = Str_convertFloat(&line[3], &cor->Minutes)) != Str_Ok) {
+    if ((result = (NMEA_Result) Str_convertFloat(&line[3], &cor->Minutes)) != NMEA_Result_Ok) {
         return (NMEA_Result) (result | NMEA_Result_Custom);
     }
 

@@ -16,7 +16,7 @@
 /**
  * @brief Enable to use StreamIn for parse input gps data
 */
-//#define NMEA_SUPPORT_ISTREAM                    (1 || defined(NMEA_LIB_STREAM))
+//#define NMEA_SUPPORT_ISTREAM                    1
 /**
  * @brief Enable Args in NMEA structure
  */
